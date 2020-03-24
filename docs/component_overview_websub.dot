@@ -1,0 +1,158 @@
+digraph d {
+node [shape=component style=filled fillcolor=grey];
+
+subgraph cluster_app {
+    label="application";
+    ucp_doc [label="manage\ndocuments" shape=ellipse];
+    ucp_sub [label="manage\nsubscriptions" shape=ellipse];
+    ucp_msg [label="manage\nmessages" shape=ellipse];
+    uc_rx_callback [label="receive\ncallback" shape=ellipse];
+}
+
+doc_api [label="object\nAPI" shape=component];
+ucp_doc -> doc_api;
+msg_api [label="message\nAPI" shape=component];
+ucp_msg -> msg_api;
+
+repo_api_outbox [label="<<rdbms>>\nAPI\noutbox" fillcolor=green];
+repo_api_inbox [label="<<sqs>>\nAPI\ninbox" fillcolor=green];
+repo_bc_inbox [label="<<sqs>>\nblockchain\ninbox" fillcolor=green];
+subgraph cluster_ws {
+   websub [label="websub\nservice" fillcolor=purple];
+}
+repo_message_lake [label="<<s3>>\nmessage\nlake" fillcolor=orange];
+repo_object_lake [label="<<s3>>\nobject\nlake" fillcolor=orange];
+repo_object_acl [label="<<s3>>\nobject\nACL" fillcolor=orange];
+repo_object_ret_q [
+    label="<<sqs>>\nobject\nretreival"
+    fillcolor=green
+];
+
+ucp_sub -> websub;
+
+repo_foreign_objects [label="foreign\nobject\nproxy"];
+uc_get_objects -> repo_foreign_objects;
+
+uc_authenticated_object_access [
+    label="authenticated\nobject access"
+    shape=ellipse
+    fillcolor=orange
+];
+doc_api -> uc_authenticated_object_access -> repo_object_acl;
+uc_authenticated_object_access -> repo_object_lake;
+uc_record_object [
+    label="record\nobject"
+    shape=ellipse
+    fillcolor=orange
+];
+doc_api -> uc_record_object -> repo_object_lake;
+
+uc_submit_message [
+    label="post message\nto api inbox"
+    shape=ellipse
+    fillcolor=orange
+];
+uc_check_message [
+    label="get message\nby reference id"
+    shape=ellipse
+    fillcolor=orange
+];
+msg_api -> uc_check_message -> repo_message_lake;
+msg_api -> uc_submit_message -> repo_api_inbox;
+
+uc_api_inout [
+    label="enqueue\ninbound\nmessages"
+    shape=ellipse fillcolor=green
+];
+repo_api_inbox -> uc_api_inout [dir=back];
+repo_api_outbox -> uc_api_inout [dir=back];
+w_api_inout [label="<<docker>>\nmessage\nreception\nworker"];
+uc_api_inout -> w_api_inout;
+
+mcu [label="<<docker>>\nmulti-channel\nblockchain\nrouter"];
+uc_bc_tx_submit [
+    label="submit\nblockchain\ntransactions"
+    shape=ellipse
+    fillcolor=orange
+];
+repo_rejected_messages [
+    label="<<sqs>>\nrejected\nmessages"
+    fillcolor=green
+];
+mcu -> uc_bc_tx_submit;
+uc_bc_tx_submit -> repo_api_outbox;
+uc_bc_tx_submit -> repo_bc_channel;
+uc_bc_tx_submit -> repo_rejected_messages;
+
+uc_update_status_rejected [
+    label="update status\nof rejected\nmessages"
+    shape=ellipse
+    fillcolor=orange
+];
+repo_rejected_messages -> uc_update_status_rejected [dir=back];
+repo_message_lake -> uc_update_status_rejected [dir=back];
+w_status_updater [label="<<docker>>\nrejected\nstatus\nupdater"]
+uc_update_status_rejected -> w_status_updater [dir=back];
+
+subgraph cluster_chan {
+    label="channel specific";
+    repo_bc_channel [
+        label="<<blockchain>>\nchannels"
+    	fillcolor=orange
+    	shape=folder
+    ];
+    scbcep [
+        label="<<docker>>\nsingle-channel\nblockchain\nevent processor"
+    ];
+    uc_bc_rx_events [
+        label="receive\ninbound\nblockchain\nevents"
+    	shape=ellipse
+    	fillcolor=orange
+    ];
+    uc_bc_rx_events -> scbcep [dir=back];
+}
+repo_bc_channel -> uc_bc_rx_events [dir=back];
+
+mp [label="<<docker>>\ninbound\nmessage\nprocessor"]
+uc_bc_proc_events [
+    label="initiate\ninbound message\nprocessing tasks"
+    shape=ellipse
+    fillcolor=green
+];
+repo_bc_inbox -> uc_bc_proc_events [dir=back];
+uc_bc_proc_events -> mp [dir=back];
+websub -> uc_bc_proc_events [dir=back];
+repo_object_acl -> uc_bc_proc_events [dir=back];
+repo_message_lake -> uc_bc_proc_events [dir=back];
+repo_object_ret_q -> uc_bc_proc_events [dir=back];
+
+uc_rx_callback -> websub [dir=back];
+
+uc_get_objects [
+    label="retrieve and store\nforeign documents"
+    shape=ellipse
+    fillcolor=green
+];
+
+repo_object_lake -> uc_get_objects [dir=back];
+repo_object_ret_q -> uc_get_objects [dir=back];
+uc_enqueue_received_message [
+    label="enqueue\nreceived\nmessage"
+    shape=ellipse
+    fillcolor=green
+];
+repo_bc_inbox -> uc_enqueue_received_message [dir=back];
+//uc_enqueue_received_message -> uc_synth_hidden_messages [dir=back];
+reception_api [label="message\nreception\nAPI"]
+uc_enqueue_received_message -> reception_api [dir=back];
+
+post_msg_from_bc [
+    label="POST\nmessage\n(from blockchain)"
+    shape=ellipse
+];
+post_msg_from_bc -> reception_api;
+uc_bc_rx_events -> post_msg_from_bc;
+
+spider [label="<<docker>>\ndocument\nspider"];
+uc_get_objects -> spider [dir=back];
+}

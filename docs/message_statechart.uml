@@ -1,0 +1,9 @@
+@startuml
+
+[*] --> Pending
+Pending --> Accepted
+Pending --> Rejected
+Accepted --> [*]
+Rejected --> [*]
+
+@enduml

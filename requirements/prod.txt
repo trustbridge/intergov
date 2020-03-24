@@ -1,0 +1,20 @@
+# base stuff
+Flask==1.0.3
+
+# IPFS ID format validator
+py-cid==0.2.1
+multihash==0.1.1
+minio==4.0.16
+boto3==1.9.151
+
+# external errors logging
+sentry-sdk==0.9.0
+
+# actual list of countries, with their 2-char names
+# specific version not to be frozed because we expect it updated frequently
+pycountry
+
+requests
+
+# Metrics collection
+python-statsd==2.1.0

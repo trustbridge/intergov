@@ -1,0 +1,4 @@
+-r prod.txt
+
+# deployment
+zappa==0.48.2

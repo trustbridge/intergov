@@ -1,0 +1,10 @@
+-r test.txt
+pip
+punch.py
+wheel
+watchdog
+flake8
+Sphinx
+sphinxcontrib-plantuml
+pyenchant
+sphinxcontrib-spelling

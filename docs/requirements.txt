@@ -1,0 +1,11 @@
+-r ../requirements.txt
+-r ../requirements/dev.txt
+-r ../requirements/test.txt
+
+sphinx
+sphinxcontrib-spelling
+sphinxcontrib-plantuml
+
+###
+# please `apt-get install plantuml` as well
+##
