@@ -220,8 +220,8 @@ services:
     container_name: multichannel_bch_router
     restart: on-failure
     environment:
+      - PYTHONPATH=/src/
       - PYTHONUNBUFFERED=1
-
     command: bash -c "cd /src & sleep 5 &&
       python intergov/processors/blockchain_router/__init__.py"
 
@@ -230,6 +230,7 @@ services:
     container_name: bch_observer
     restart: on-failure
     environment:
+      - PYTHONPATH=/src/
       - PYTHONUNBUFFERED=1
     command: bash -c "cd /src & sleep 5 &&
       python intergov/processors/blockchain_observer/__init__.py"

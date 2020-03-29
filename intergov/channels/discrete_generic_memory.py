@@ -7,7 +7,7 @@ class DiscreteGenericMemoryChannel:
 
     ID = 'DiscreteGenericMemoryChannel'
 
-    def __init__(self):
+    def __init__(self, config):
         self.transport = transport.GenericMemoryTransport()
         self.message_class = protocol.Message
         self.channel_filter = filters.NoneFilter()
