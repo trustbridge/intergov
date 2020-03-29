@@ -1,10 +1,11 @@
 import time
 import requests
 from http import HTTPStatus
+
 from intergov.conf import env_queue_config
 from intergov.repos.channel_pending_message import ChannelPendingMessageRepo
 from intergov.repos.message_updates import MessageUpdatesRepo
-from intergov.channels.discrete_generic_memory import DiscreteGenericMemoryhannel
+from intergov.channels.discrete_generic_memory import DiscreteGenericMemoryChannel
 from intergov.domain.wire_protocols import generic_discrete as gd
 from intergov.loggers import logging
 
