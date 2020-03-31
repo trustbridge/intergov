@@ -4,7 +4,7 @@ from tests.unit.domain.wire_protocols import test_generic_message as proto_tests
 
 
 def test_message_factory():
-    chan = channels.DiscreteGenericMemoryChannel()
+    chan = channels.DiscreteGenericMemoryChannel(config=None)
     MessageClass = chan.message_factory()
     msg_dict = proto_tests._generate_msg_dict()
     msg = MessageClass.from_dict(msg_dict)
@@ -13,7 +13,7 @@ def test_message_factory():
 
 
 def test_post():
-    chan = channels.DiscreteGenericMemoryChannel()
+    chan = channels.DiscreteGenericMemoryChannel(config=None)
     MessageClass = chan.message_factory()
     msg_dict = proto_tests._generate_msg_dict()
     msg = MessageClass.from_dict(msg_dict)
