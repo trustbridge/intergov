@@ -8,4 +8,4 @@ pie.bat
 demo-local.env
 demo-local-cn.env
 
-/var/
+/var/.venv/
