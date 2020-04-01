@@ -6,13 +6,13 @@ from pie import *
 
 
 class DockerCompose:
-    def __init__(self,docker_compose_filename,project_name=None):
-        self.docker_compose_filename=docker_compose_filename
+    def __init__(self,docker_compose_file_path,project_name=None):
+        self.docker_compose_file_path=docker_compose_file_path
         self.project_name=project_name
 
 
     def cmd(self,compose_cmd,compose_options=[],options=[]):
-        cops=[f'-f {self.docker_compose_filename}']
+        cops=[f'-f {self.docker_compose_file_path}']
         if self.project_name:
             cops.append(f'-p {self.project_name}')
         cops.extend(compose_options)
