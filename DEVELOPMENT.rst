@@ -31,8 +31,10 @@ see demo-local-example.env
 
 You can generate docs too with:
 
-   python3.6 pie.py docs.build_docker_image
+   python3.6 pie.py docs.create_docker_image
    python3.6 pie.py docs.build_docs
+   # alternative: starts a server that hosts and autobuilds the docs on changes - http://localhost:8998/
+   python3.6 pie.py docs.build_docs_autobuild
 
 
 Project struture
