@@ -30,9 +30,9 @@ didn't see it (or just to be safe after code is updated).
 .. code-block::
     bash
 
-    docker-compose -f demo-dc.yml up
+    docker-compose up
 
-Minio (S3 analogue) has nice UI (http://localhost:9000/) - secrets are in demo-dc.yml file.
+Minio (S3 analogue) has nice UI (http://localhost:9000/) - secrets are in docker-compose.yml file.
 
 Unittests will be run on each startup, you may disable it by commenting `tests` service in the
 docker-compose file.
@@ -41,9 +41,9 @@ If you want to run integration tests:
 
 .. code-block::
 
-    docker-compose -f demo-dc.yml run tests-unit sh -c "cd /src && make test-integration"
+    docker-compose run tests-unit sh -c "cd /src && make test-integration"
     # or
-    docker-compose -f demo-dc.yml run tests-unit sh -c "cd /src && py.test tests/integration"
+    docker-compose run tests-unit sh -c "cd /src && py.test tests/integration"
 
 
 If you want to run another installation (like second country) use demo-dc-cn.yml file
