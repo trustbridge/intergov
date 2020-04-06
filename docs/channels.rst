@@ -367,8 +367,334 @@ such that:
   operate against standard APIs,
   which hide the details of which actual channel is used.
 * Governments should be able to modify their channel implementations
-  in way that insultates their regulated community from the change.
+  in way that insulates their regulated community from the change.
   In other words, without impacting their users.
 * Makes it possible to integrate
   additional, new channels
   without modifying the standard Channel API design.
+
+
+WIP
+---
+
+
+**Structuring the doco**
+
+Integrator doc
+ - messages API
+ - document API
+ - subscription API
+ - auth + access control
+
+Channel developer doc
+ - channel API
+ - subscription API?
+
+Node developers guide
+ - System components:
+   + internal microservices
+     * message rx api - callback
+     * channel api
+   + worker components
+   + repos...
+ - code structure (clean architecture doc)
+   + use cases + requests + response objects
+     * doco of tests included
+   + domain model + serialization
+ - diagrams, overview stuff
+
+
+**Messaging between countries**
+
+.. uml::
+
+Node is a message router. Technical ACK - I got the message and I downloaded the documents.
+
+Sender: AU
+Receiver: CN
+Subject: ID of object
+Object: the document
+Predicate: states of the object
+
+
+   @startuml
+   start
+   :AU sends message with COO to CN - subject: aig.com.au:<AIG_ID>, predicate: unece.un.org:coo:created;
+   :CN technical ACKs - subject: , predicate: unece.un.org:technicalAck:received/downloaded/etc...;
+   stop
+   @enduml
+
+
+If the subject of the ack is the hash of the canonically formatted <from to subject object predicate>, then we can use the same protocol for side trees and their leaves?
+
+Sender: CN
+Receiver: AU
+Subject: cn.gov:<hash>
+Object: None
+Predicate: unece.un.org:technicalAck:objectDownloaded
+
+Don't technical ack an object of None OR don't technicalAck a technicalAck predicate
+
+
+The node may deduplicate messages; two scenarios:
+ - the exact same message is sent twice, for no good reason
+ - the same message is sent again because the receiver told us that it could not get the first one
+
+
+**Node message state:**
+
+POST /messages/
+
+returns <id> aka ``sender_ref``
+
+GET /messages/<id>
+
+GET /messages/<id>/status
+
+GET /messages/<id>/journal
+
+
+.. uml::
+
+   @startuml
+   [*] --> Pending
+   Pending : either posted to the channel or\n waiting to be bundled with other messages
+   Pending --> Sent : Sent to the channel\n as a single message
+   Pending --> Bundled
+   Pending --> Failed : If the message cannot be\nsent (pre-channel fail)
+   Bundled --> Sent
+   Bundled : A "bundler" (perhaps the router) groups messages,\n puts them into a document and\n sends a message with that document as the object.
+   Bundled : If the bundled message fails, we think the messages\n should be set back to pending\n and can be bundled as appropriate at the time.
+   Sent --> Delivered
+   Sent : We have successfully asked the\n channel to deliver the message. Delivery is async.
+   Sent --> Pending : If the message was not\nsuccessfully delivered,\nit must be tried again
+   Sent --> Failed : If the message cannot be delivered\nafter trying again (channel fail)
+   Delivered : The channel reports that\n delivery has been successful.
+   Delivered -[dashed]-> [*] : Semi-terminal\nSuccess is a zombie,\nonly failure is permanent
+   Delivered -up-> Withdrawn
+   Withdrawn : The message was thought to be delivered\n but that was in error.\nUnlikely, but necessary due to\nthe vagaries of blockchain.
+   Withdrawn --> Pending
+   Failed --> [*]
+   @enduml
+
+/messages/<id>/acknowledgement
+
+.. uml::
+
+   @startuml
+   [*] --> Unacknowledged
+   Unacknowledged --> TechnicalAck
+   Unacknowledged --> TechnicalNack
+   TechnicalAck --> [*]
+   TechnicalNack --> [*]
+   @enduml
+
+
+Bundled messages would be put into a "message list" document and the "bundle message" is a message about a document that is a list of messages, not a message about a single document.
+
+Blockchain problems that we are trying to deal with:
+
+ - If the message is put on the chain but we don't consider it delivered and China download the document and ack it anyway, it may end up being on a fork and not ever sent.
+
+
+**Message reception state:**
+
+.. uml::
+
+   @startuml
+   [*] --> Unacknowledged
+   Unacknowledged --> TechnicalAck
+   Unacknowledged --> TechnicalNack
+   TechnicalAck --> [*]
+   TechnicalNack --> [*]
+   @enduml
+
+
+**Channel message state:**
+
+POST /messages
+
+GET /messages/<id>
+
+GET /messages/<id>/status
+
+.. uml::
+
+   @startuml
+   [*] --> Received
+   Received --> Confirmed
+   Confirmed : Means that the message has passed through the channel\nOn a blockchain, this means that there are sufficient blocks on top\nOn an RDS this means that the message was commit to the table.\nEffectively the end state for most successful messages.
+   Received --> Undeliverable
+   Undeliverable : The channel was unable to write the message\nand has stopped trying to confirm
+   Confirmed --> Revoked
+   Revoked : Confirmation was erroneously issued on a fork.\nWe expect this to be extremely rare; \nit is a theoretical possibility.
+   Revoked --> [*]
+   Undeliverable --> [*]
+   @enduml
+
+BlockchainChannel:
+
+ - received message and writes to an RDS, returning an ID
+ - writes to the blockchain
+ - waits (forever; stays in Received) and observes until:
+
+   + multiple blocks are written on top of the chain (Confirmed)
+   + OR observes that it was on a fork and the chain has moved from a previous block and the message was never written (Undeliverable)
+
+It is the channel API's business to decide if it fails as Undeliverable on the first attempt, or whether it tries a few times (config value) before being marked as Undeliverable.
+
+
+GET/POST /<subscription endpoints> - WEBSUB standard
+
+GET /messages/?sent_date=2020-01-12Z123456&receiver=AU
+
+
+**Channel API**
+
+.. uml::
+
+   @startuml
+   title Channel API
+   
+   participant Node
+   participant Channel_API
+   participant Channel
+   participant Channel_API_2
+   participant Node2
+   
+   
+   Node->Channel_API: get nodes
+   Node->Channel_API: put nodes/<Node> (document API endpoints, ssl pubkey)
+   
+   ... Some ~~long delay~~ ...
+   
+   Node->Channel_API: subscribe to new messages for me (AU)
+   Node2->Channel_API_2: subscribe to new messages for me (CN)
+   
+   ... Some ~~long delay~~ ...
+   
+   Node->Channel_API: send message (A)
+   Node->Channel_API: get message status
+   Node->Channel_API: get message status
+   Node->Channel_API: get message status
+   
+   Channel_API->Channel: send message (A)
+   Node->Channel_API: get message status (SENT)
+   
+   Channel->Channel_API_2: send message (A)
+   
+   Channel_API_2->Node2: new message (A) received
+   
+   ... Some ~~long delay~~ ...
+   
+   Node2->Channel_API_2: send message (B)
+   Channel_API_2->Channel: send message (B)
+   Channel->Channel_API: send message (B)
+   
+   Node<-Channel_API: new message (B) received
+   @enduml
+
+
+
+**Foreign Document Access (incomplete)**
+
+.. uml::
+
+   @startuml
+   title Foreign document access
+   
+   participant Chamber
+   box "Local Node" #LightGreen
+       participant Documents_API
+       participant Messages_API
+   end box
+   box "Channel" #LightOrange
+       participant Channel_API
+       participant Channel
+       participant Foreign_Channel_API
+   end box
+   box "Foreign Node" #LightBlue
+       participant ForeignNode
+   end box
+   
+   
+   Chamber->Documents_API: publish document
+   activate Documents_API
+   return multihash
+   
+   Chamber->Messages_API: send message
+   activate Messages_API
+   return sender_ref
+   
+   Messages_API->Channel_API: send message
+   Channel_API->Channel_API: send message
+   
+   ... Some time later ...
+   
+   Messages_API<-Channel_API: message sent
+   Messages_API->Documents_API: update ACL for document\nfrom message
+   
+   ... Some time later ...
+   
+   ForeignNode->Documents_API: get document
+   activate Documents_API
+   return document
+   
+   ForeignNode->Foreign_Channel_API: send technical ack
+   @enduml
+
+
+
+**Intergov Node**
+
+.. uml::
+
+   @startuml
+   title Intergov node
+   
+   package "Documents API" {
+       [Document API] -down-> (publish document)
+       [Document API] -down-> (get document)
+       (publish document) -down-> [Document Lake]
+       (get document) -down-> [Document Lake]
+       (get document) -down-> [Document ACL]
+       (retrieve and store\foreign docs) -up-> [Document Lake]
+       [<<docker>> document spider] -up-> (retrieve and store\foreign docs)
+       (retrieve and store\foreign docs) -down-> [foreign object proxy]
+   }
+   
+   package "Messages API" {
+       database Message_Lake
+       [Message API] -down-> (get message by id)
+           (get message by id) -down-> Message_Lake
+       [Message API] -down-> (post message)
+           (post message) -down-> [Message Inbox]
+       [Message Inbox] <- (poll for new messages)
+           (poll for new messages) -> [Message Router]
+       [Message Router] -down-> Channel
+       [<<docker>>\nrejected\nstatus\nupdater] -up-> (update status of rejected messages)
+       (update status of rejected messages) -up-> Message_Lake
+   }
+   
+   package "Subscriptions" {
+       database Subscriptions_S3
+       [Subscriptions API] -down-> (register subscription)
+           (register subscription) -down-> Subscriptions_S3
+       [Subscriptions API] -down-> (deregister subscription)
+           (deregister subscription) -down-> Subscriptions_S3
+       [Message Listener] -up-> Subscriptions_S3
+       [Message Listener] -> [Channel API]
+       [<<docker>>\noutbound\ncallback\nprocessor] -up-> (dispatch callbacks to subscribers)
+           (dispatch callbacks to subscribers) -up-> Subscriptions_S3
+           (dispatch callbacks to subscribers) -up-> Publish_outbox
+           (dispatch callbacks to subscribers) -up-> Delivery_outbox
+       (deliver callback) -down-> Delivery_outbox
+       (deliver callback) -up-> [callback proxy]
+       [<<docker>> callback deliverer] -down-> (deliver callback)
+       [callback proxy] -up-> (receive callback)
+   }
+   
+   package "Channel" {
+       [Channel API] -> [Channel]
+   }
+   @enduml
