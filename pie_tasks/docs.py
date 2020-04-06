@@ -45,7 +45,7 @@ def build_docs_autobuild():
         '-b html',
         '-p 8998',
         '-H 0.0.0.0',
-        '--watch docs/',
+        '--ignore docs/_build/*',
         'docs',
         'docs/_build/html',
     ]
