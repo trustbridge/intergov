@@ -128,7 +128,7 @@ def env_s3_config(prefix):
     Usage:
     OBJECT_LAKE_CONN = env_s3_config('DOCAPI_OBJ_LAKE')
 
-    Full-default configuration is made for demo-dc.yml minio instance
+    Full-default configuration is made for docker-compose.yml minio instance
     But can be easily replaced to external S3 or minio either globally
     (for all S3 repos, in this case leave specific variables undefined):
 
@@ -197,7 +197,7 @@ def env_queue_config(prefix):
     Usage:
     BC_INBOX_CONF = env_queue_config('MSG_RX_API_BC_INBOX')
 
-    Full-default configuration is made for demo-dc.yml elasticmq instance
+    Full-default configuration is made for docker-compose.yml elasticmq instance
     But can be easily replaced to external SQS either globally
     """
     config = {
