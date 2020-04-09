@@ -376,6 +376,20 @@ such that:
 
 WIP
 ---
+**Membership of a channel**
+
+CHAFTA:
+
+Under what conditions can a country join a channel?
+
+ - AU gives CN the keys to use the channel out-of-bounds
+ - CN is given access to a document by combination of a key (identifying them as CN) and because we sent a message to CN which caused the ACL to be updated
+
+Does the routing need to be more fine grained than a country?
+
+ - Jurisdiction
+
+
 
 
 **Structuring the doco**
@@ -439,6 +453,12 @@ Don't technical ack an object of None OR don't technicalAck a technicalAck predi
 The node may deduplicate messages; two scenarios:
  - the exact same message is sent twice, for no good reason
  - the same message is sent again because the receiver told us that it could not get the first one
+
+
+**TODO:**
+
+ - define IDs for messages and documents and their contexts
+ - List an example set of documents that might be sent
 
 
 **Node message state:**
@@ -510,7 +530,139 @@ Blockchain problems that we are trying to deal with:
    @enduml
 
 
+Channel Technical Details
+-------------------------
+
+A channel consists of a posting API and a receiving API on one end, a channel medium in the middle and one or more posting and receiving APIs on the other ends.
+ - Posting to a channel is a broadcast mechanism; receivers need to determine if a message is meant for them or not
+ - Sender verification is the responsibility of the receiver
+ - Non-repudiation may be guaranteed by the channel medium
+
+.. uml::
+
+   @startuml
+   title A channel
+   
+   cloud "Channel Medium" as cm
+   
+   package "Channel API - side A" {
+       [Channel Posting API] as a_cpa
+       (post message) as a_pm
+       [Channel Receiving API] as a_cra
+       (receive message) as a_rm
+
+       a_cpa --> a_pm
+       a_pm --> cm
+       a_cra <-- a_rm
+       a_rm <-- cm
+   }
+   
+   package "Channel API - side B" {
+       [Channel Posting API] as b_cpa
+       (post message) as b_pm
+       [Channel Receiving API] as b_cra
+       (receive message) as b_rm
+
+       b_cpa --> b_pm
+       b_pm --> cm
+       b_cra <-- b_rm
+       b_rm <-- cm
+   }
+   @enduml
+
+
+
 **Channel message state:**
+
+ - Channel encrypts and decrypts messages if required (ie. if the channel medium is public)
+ - Channel requires auth at each end to restrict access to messages
+   + Therefore, each channel knows which nodes are allowed to read and post messages
+
+.. uml::
+
+   @startuml
+   title Send message across channel with auth
+   hide footbox
+   
+   box "Local Node" #LightGreen
+       participant Node
+       participant Channel_Posting_API
+   end box
+   participant Channel_Medium
+   box "Foreign Node" #LightBlue
+       participant Channel_Receiving_API
+       participant Foreign_Node_1
+   end box
+   participant Foreign_Node_2
+   participant Foreign_Node_3
+   
+   Node->Channel_Posting_API: post message
+   note right: authorise sender and encrypt message with channel key pair
+   Channel_Posting_API->Channel_Medium: write message
+   Channel_Receiving_API->Channel_Medium: get new messages
+   note right: decrypt message
+   Channel_Receiving_API->Foreign_Node_1: notify message ready
+   Channel_Receiving_API->Foreign_Node_2: notify message ready
+   Channel_Receiving_API->Foreign_Node_3: notify message ready
+   Foreign_Node_1->Channel_Receiving_API: authenticate and request message
+   Foreign_Node_2->Channel_Receiving_API: authenticate and request message
+   @enduml
+
+.. uml::
+
+   @startuml
+   title Sending message back across same channel medium
+   hide footbox
+   
+   box "Local Node" #LightGreen
+       participant Node
+       participant Node_Other
+       participant Channel_Receiving_API_Foreign
+   end box
+   participant Channel_Medium
+   box "Foreign Node" #LightBlue
+       participant Channel_Posting_API_Foreign
+       participant Foreign_Node
+   end box
+
+   Foreign_Node->Channel_Posting_API_Foreign: post message
+   Channel_Posting_API_Foreign->Channel_Medium: write message
+   Channel_Receiving_API_Foreign->Channel_Medium: get new messages
+   Channel_Receiving_API_Foreign->Node: notify message ready
+   Channel_Receiving_API_Foreign->Node_Other: notify message ready
+   Node->Channel_Receiving_API_Foreign: authenticate and request message
+   Node_Other->Channel_Receiving_API_Foreign: authenticate and request message
+   @enduml
+
+.. uml::
+
+   @startuml
+   title Send Technical Ack back
+   hide footbox
+   
+   participant Node
+   participant Node_Other
+   participant Channel
+   participant Foreign_Node
+
+   Foreign_Node->Channel: encrypt with Technical Ack key pair and post message
+   Node->Channel: get message
+   note right of Node: Node decrypts the Technical Ack and trusts it because it was encrypted with the accepted key pair
+   Node_Other->Channel: get message
+   note right of Node_Other: Node_Other attempts to decrypt the Technical Ack but it has a different key pair so decryption fails
+   @enduml
+
+Could a channel be a single direction? Ie. Channel Posting API, Channel Receiving API
+If we want to go both ways, we just duplicate the APIs in the other direction. They can even share secrets to allow them to post on the same channel medium.
+Ie. key-pair for posting AU->CN and different key-pair for posting CN->AU. key-pairs are unique to pair of countries, direction and channel. This allows AU to post messages to CN but not read (the content of) those messages. So, no
+
+We don't need a specific channel for Acks, we just need to authorise SOMEONE to send Acks. Messages with Acks that aren't authorised for that predicate are ignored/recorded as invalid.
+Real world - who can ack a CoO? We don't care, but we give China the key-pair that allows someone to and then it's China's problem to assign/move that assignment around.
+
+Same for Acks as for message key-pairs.
+
+Router translates Receiver (Jurisdiction=AU/CN) and Predicate to a Participant on a Channel. Sender turns into Participant on a Channel.
+
 
 POST /messages
 
@@ -523,7 +675,7 @@ GET /messages/<id>/status
    @startuml
    [*] --> Received
    Received --> Confirmed
-   Confirmed : Means that the message has passed through the channel\nOn a blockchain, this means that there are sufficient blocks on top\nOn an RDS this means that the message was commit to the table.\nEffectively the end state for most successful messages.
+   Confirmed : Means that the message has passed through the channel.\nOn a blockchain, this means that there are sufficient blocks on top.\nOn an RDS this means that the message was commit to the table.\nEffectively the end state for most successful messages.
    Received --> Undeliverable
    Undeliverable : The channel was unable to write the message\nand has stopped trying to confirm
    Confirmed --> Revoked
@@ -546,7 +698,7 @@ It is the channel API's business to decide if it fails as Undeliverable on the f
 
 GET/POST /<subscription endpoints> - WEBSUB standard
 
-GET /messages/?sent_date=2020-01-12Z123456&receiver=AU
+GET /messages/?sent_date=2020-01-12Z123456&receiver=AU - or do we need to use a delivered_date? How do we handle the uncertainty of a block not being added to the chain after it's been sent?
 
 
 **Channel API**
