@@ -115,6 +115,11 @@ services:
   tests-integration:
     <<: *base_service
     container_name: tests-integration
+    depends_on:
+      - postgresql
+      - elasticmq
+      - minio
+      - test-server-dummy-test-helper
     command: bash -c "cd /src && sleep 10 && make test-integration"
 
 
