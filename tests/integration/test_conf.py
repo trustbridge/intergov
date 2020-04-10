@@ -5,7 +5,6 @@ from intergov.conf import env_s3_config, env_postgres_config, env_queue_config
 
 @pytest.mark.tryfirst
 def test():
-
     s3 = env_s3_config('TEST')
     queue = env_queue_config('TEST')
     postgres = env_postgres_config('TEST')
