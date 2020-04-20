@@ -12,7 +12,7 @@ Please note:
  * Please do open tickets for discussion, help requests, etc.
  * We have adopted the code of conduct published at https://www.contributor-covenant.org/
 
-TODO: create readethedocs site and point to it.
+TODO: create readthedocs site and point to it.
 
 
 Quickstart
@@ -23,6 +23,17 @@ Quickstart
    python3.6 pie.py intergov.start
    python3.6 pie.py intergov.tests.unit
    python3.6 pie.py intergov.tests.integration
+
+or, using docker-compose directly:
+
+   $ touch demo-local.py
+   $ docker-compose up (or add -d to keep it running in the background)
+   $ (after it's started) docker-compose up tests-unit (unit tests)
+   $ (after it's started) docker-compose up tests-integration (integration tests)
+
+   $ (to clean it up) docker-compose down --volumes (note - you have to delete var/ directory as well)
+
+For integration tests going fine you need to have all containers started and running.
 
 Expect the last part (integration tests) to take a minute or two.
 
@@ -89,4 +100,3 @@ and interact with each other through APIs
 or backing services (databases, queues, etc).
 They are designed to be deployed in HA configurations
 behind load ballancers (with dynamic scaling, etc).
-

@@ -115,6 +115,13 @@ services:
   tests-integration:
     <<: *base_service
     container_name: tests-integration
+    depends_on:
+      - postgresql
+      - elasticmq
+      - minio
+      - test-server-dummy-test-helper
+      - message_rx_api
+      - message_api
     command: bash -c "cd /src && sleep 10 && make test-integration"
 
 
@@ -225,15 +232,15 @@ services:
     command: bash -c "cd /src & sleep 5 &&
       python intergov/processors/blockchain_router/__init__.py"
 
-  bch_observer:
-    <<: *base_service
-    container_name: bch_observer
-    restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
-      - PYTHONUNBUFFERED=1
-    command: bash -c "cd /src & sleep 5 &&
-      python intergov/processors/blockchain_observer/__init__.py"
+  # bch_observer:
+  #   <<: *base_service
+  #   container_name: bch_observer
+  #   restart: on-failure
+  #   environment:
+  #     - PYTHONPATH=/src/
+  #     - PYTHONUNBUFFERED=1
+  #   command: bash -c "cd /src & sleep 5 &&
+  #     python intergov/processors/blockchain_observer/__init__.py"
 
   rejected_messages_processor:
     <<: *base_service
