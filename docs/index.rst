@@ -13,6 +13,7 @@ Intergov Ledger
    platform
    backing
    channels
+   channel_api
  
 .. deployable_components
 
