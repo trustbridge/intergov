@@ -25,20 +25,30 @@ pipeline {
 
     parameters {
         booleanParam(
-            name: 'all_tests',
+            name: 'run_tests',
             defaultValue: false,
             description: 'Run tests for all components'
         )
     }
 
     stages {
-        // intergov required for running full test suite
+
+        stage('Setup') {
+            steps {
+                dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
+                    checkout scm
+                }
+            }
+        }
+
+
         stage('Testing') {
 
             when {
                 anyOf {
+                    branch 'master'
                     changeRequest()
-                    equals expected: true, actual: params.all_tests
+                    equals expected: true, actual: params.run_tests
                 }
             }
 
@@ -51,9 +61,6 @@ pipeline {
 
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
-
-                            checkout scm
-
                             sh '''#!/bin/bash
                                 cp demo-local-example.env demo-local.env
                                 python3.6 pie.py intergov.build
@@ -70,7 +77,7 @@ pipeline {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/")  {
                             sh '''#!/bin/bash
                                 python3.6 pie.py intergov.tests.unit
-                                python3.6 pie.py intergov.tests.integration || true
+                                python3.6 pie.py intergov.tests.integration
                             '''
                         }
                     }
@@ -110,6 +117,16 @@ pipeline {
     }
 
     post {
+        success {
+            script {
+                if ( env.BRANCH_NAME == 'master' ) {
+                    build job: '../cotp-devnet/build/master', parameters: [
+                        string(name: 'branchref_intergov', value: "${GIT_COMMIT}")
+                    ]
+                }
+            }
+        }
+
         cleanup {
             cleanWs()
         }
