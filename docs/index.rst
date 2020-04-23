@@ -12,9 +12,9 @@ Intergov Ledger
    inbound
    platform
    backing
-   channels
    channel_api
- 
+   architecture_decision_notes/index
+
 .. deployable_components
 
 
