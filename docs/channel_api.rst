@@ -8,7 +8,7 @@ A channel consists of two or more endpoints and a shared medium in the middle - 
 An endpoint consists of two parts, either of which are optional, but the endpoint is only useful if at least one part is implemented.
 
  - The Posting API - A node uses this to send a message through a channel
- - The Receiving API - A node uses this to receive messages addressed to its jurisdiction [#]_ from a channel
+ - The Receiving API - A node uses this to receive messages addressed to its jurisdiction from a channel
 
 These two APIs handle the complexities of the channel medium and are authorised to send messages on the channel (on behalf of an entity). Therefore, access to these APIs must be controlled.
 
@@ -62,10 +62,6 @@ These two APIs handle the complexities of the channel medium and are authorised 
    @enduml
 
 
-.. [#] Nodes act on behalf of jurisdictions, which is why it's not addressed to the node, but the jurisdiction. If there are multiple nodes in a jurisdiction subscribed to a particular channel, all of those nodes will receive all messages addressed to that jurisdiction.
-
-
-
 **Channel Auth**
 
 A channel posting endpoint is posting messages AS the jurisdiction and therefore must ensure that only nodes that are permitted to send messages AS the jurisdiction are allowed to post.
@@ -77,16 +73,6 @@ For example, if a node operator is operating private channel APIs for its own us
 A channel may have many nodes using it, but tens not 1000s.
 
 The current reference implementation at TODO assumes that the node operator is also the channel endpoint operator, therefore manual devops style auth configuration is fine (eg. subnet only networking/whitelisting IP addresses/API Gateway SIG4 certs etc...).
-
-Notes:
-
- - Posting to a channel is a broadcast mechanism; receivers need to determine if a message is meant for them or not
- - Sender authorisation is implemented by the channel
- - Sender verification is the responsibility of the receiver
- - Non-repudiation may be guaranteed by the channel medium
-
-Question: Is posting to a channel always broadcast? Or may some channel mediums deliver only to the intended recipient?
-And are the above statements all true?
 
 
 Channel Posting API
@@ -195,6 +181,8 @@ Channel Receiving API
 
 | ``GET /messages/?sent_date=2020-01-12Z123456&receiver=AU`` - some method of querying for messages, optional?
 |   or do we need to use a delivered_date? How do we handle the uncertainty of a block not being added to the chain after it's been sent?
+
+| ``GET /messages/?status_update_timestamp_after=2020-01-12Z123456&receiver=AU``
 
 
 A typical BlockchainChannel:
