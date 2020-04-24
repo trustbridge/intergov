@@ -8,7 +8,7 @@ A channel consists of two or more endpoints and a shared medium in the middle - 
 An endpoint consists of two parts, either of which are optional, but the endpoint is only useful if at least one part is implemented.
 
  - The Posting API - A node uses this to send a message through a channel
- - The Receiving API - A node uses this to receive messages addressed (to it?) from a channel
+ - The Receiving API - A node uses this to receive messages addressed to its jurisdiction [#]_ from a channel
 
 These two APIs handle the complexities of the channel medium and are authorised to send messages on the channel (on behalf of an entity). Therefore, access to these APIs must be controlled.
 
@@ -62,17 +62,21 @@ These two APIs handle the complexities of the channel medium and are authorised 
    @enduml
 
 
+.. [#] Nodes act on behalf of jurisdictions, which is why it's not addressed to the node, but the jurisdiction. If there are multiple nodes in a jurisdiction subscribed to a particular channel, all of those nodes will receive all messages addressed to that jurisdiction.
+
+
+
 **Channel Auth**
 
 A channel posting endpoint is posting messages AS the jurisdiction and therefore must ensure that only nodes that are permitted to send messages AS the jurisdiction are allowed to post.
 
-It is the channel operator's business to determine access requirements for the channel.
+It is the channel endpoint operator's business to determine access requirements for the channel.
 
 For example, if a node operator is operating private channel APIs for its own use, and not allowing any other nodes to use their channel APIs, then network level security may be sufficient. Similarly, a developer may use docker networking connections to restrict access without implementing any explicit access controls. However, if a channel operator wanted to support multiple nodes, then they would need to develop a satisfactory access control regime, sufficient for the requirements of that channel.
 
-A channel may have a bunch of nodes using it, but tens not 1000s. So manual/devops style auth configuration is fine.
+A channel may have many nodes using it, but tens not 1000s.
 
-Pilot 2 implementation: Given all nodes will also be channel operators, either subnet only networking or whitelisting IP addresses/API Gateway SIG4 certs etc...
+The current reference implementation at TODO assumes that the node operator is also the channel endpoint operator, therefore manual devops style auth configuration is fine (eg. subnet only networking/whitelisting IP addresses/API Gateway SIG4 certs etc...).
 
 Notes:
 

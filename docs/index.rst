@@ -6,6 +6,7 @@ Intergov Ledger
    :caption: Contents
 
    purpose
+   terminology
    public_apis
    events
    outbound
@@ -14,6 +15,7 @@ Intergov Ledger
    backing
    channel_api
    architecture_decision_notes/index
+   WIP
 
 .. deployable_components
 
