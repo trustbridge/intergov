@@ -179,10 +179,7 @@ Channel Receiving API
    @enduml
 
 
-| ``GET /messages/?sent_date=2020-01-12Z123456&receiver=AU`` - some method of querying for messages, optional?
-|   or do we need to use a delivered_date? How do we handle the uncertainty of a block not being added to the chain after it's been sent?
-
-| ``GET /messages/?status_update_timestamp_after=2020-01-12Z123456&receiver=AU``
+| ``GET /messages?updated_since=2020-01-12Z123456&receiver=AU`` - includes new messages
 
 
 A typical BlockchainChannel:
@@ -191,7 +188,7 @@ A typical BlockchainChannel:
  - tells the subscription engine that a new message has arrived once a certain number of blocks are on top
 
 
-**How does blockchain keep track of what it has and hasn't seen?**
+**TODO: document this better, in a better place? How does blockchain keep track of what it has and hasn't seen?**
 
 Store a pointer that keeps track of the last block inspected. If head is above pointer (walk through next blocks until end?), then we are on the main branch. If not, walk backwards until you find the fork and mark any messages as false alarm.
 
