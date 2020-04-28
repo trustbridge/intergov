@@ -52,33 +52,59 @@ Notes
 .. uml::
 
    package "National Infrastructure" {
-      component node as "Node"
+
+      actor "Node\nUser" as node_user
       interface channel_api as "Channel\nAPI"
-      note left of channel_api : Channel Authentication required\nto access the Channel API
-      component channel_endpoint as "Channel\nEndpoint"
-      actor channel_operator as "Channel\nOperator"
-      actor node_operator as "Node\nOperator"
-      actor channel_manager as "Channel\nManager"
+      interface node_api as "Node\nAPI"
+      component "Identiy\nProvider" as idp
+      
+      note "Channel Authentication required\nto access the Channel API.\nIf the Node Operator\nis also the Channel Operator,\nthen channel authentication may be\nimplemented at the network layer." as note_chan_auth
+      note_chan_auth .down. channel_api
+      
+      package "Operations" {
+         component node as "Node"
+	 component channel_endpoint as "Channel\nEndpoint"
+	 actor channel_operator as "Channel\nOperator"
+         actor node_operator as "Node\nOperator"
+	 note "The Node Operator may or may not be\nthe same party as the Channel Operator.\nThe Channel Endpoint may be private\nto the Node, or it may be independant of\nthe Node (potentially shared between\nnodes)." as note_nod_chan_op
+	 note_nod_chan_op .right. channel_operator
+	 note_nod_chan_op .left. node_operator
+	 note_nod_chan_op .up. node
+	 note_nod_chan_op .up. channel_endpoint
+      }
+      package "Governance" {
+         actor node_accred as "Node\nAccreditation"
+         actor channel_manager as "Channel\nManager"
+	 note "The machinery of government\nmay comprise different agencies\nthat negotiate channels independantly\nbut node accreditation should probably\nbe administered centrally." as note_mog
+	 node_accred .right. note_mog
+	 note_mog .right. channel_manager
+	 
+      }
       note "Between the Channel Media\nand the Channel Endpoint,\nthe Channel Policy is enforced" as note_chan_policy
    }
-   cloud {
+   cloud "Extra-Jurisdictional" {
       database channel_media as "Channel\nMedia"
-      note "Channel Manager configures the Channel Media.\nChannel Operator uses Channel Keys to\naccess (write to) the Channel Media." as note_chan_keys
-      note "Channel Media is distributed infrastructure\nsupporting the Channel Policy." as note_chan_media
+      note "Channel Manager configures the Channel Media.\nChannel Operator may use Channel Keys so that\nthe Channel Endpoint can access (write to) the\nChannel Media." as note_chan_keys
+      note "Channel Media is the pan-jurisdictional\nprotocol implementation, negotiated\nthe (two or more) jurisdictions. While\nChannel Policy is bound to the semantics\nof local regulation, the Channel Media is\nbound to standardised international semantics." as note_chan_media
    }
 
-   node -down-> channel_api
+   node_accred -up-> node_operator
+   node -up-> channel_api
+   node_api -down- node
    channel_api -down- channel_endpoint
    channel_endpoint -down-> channel_media
-   channel_operator -left-> channel_endpoint
-   node_operator -left-> node
-   channel_manager -left-> channel_operator
+   channel_operator -up-> channel_endpoint
+   node_operator -up-> node
+   channel_manager -up-> channel_operator
    note_chan_keys .left. channel_media
-   channel_operator .down. note_chan_keys
+   channel_endpoint .down. note_chan_keys
    channel_manager .down. note_chan_keys
-   channel_endpoint .left. note_chan_policy
-   note_chan_media .right. channel_media
+   channel_endpoint .up. note_chan_policy
+   note_chan_media .up. channel_media
 
+   node -up-> idp
+   node_user -down-> idp
+   node_user -down-> node_api
 
 Jurisdiction
 ^^^^^^^^^^^^
