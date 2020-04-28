@@ -49,6 +49,35 @@ Glossary
 Notes
 -----
 
+.. uml::
+
+   package "National Infrastructure" {
+      component node as "Node"
+      interface channel_api as "Channel\nAPI"
+      note left of channel_api : Channel Authentication required\nto access the Channel API
+      component channel_endpoint as "Channel\nEndpoint"
+      actor channel_operator as "Channel\nOperator"
+      actor node_operator as "Node\nOperator"
+      actor channel_manager as "Channel\nManager"
+      note "Between the Channel Media\nand the Channel Endpoint,\nthe Channel Policy is enforced" as note_chan_policy
+   }
+   cloud {
+      database channel_media as "Channel\nMedia"
+      note "Channel Manager configures the Channel Media.\nChannel Operator uses Channel Keys to\naccess (write to) the Channel Media." as note_chan_keys
+      note "Channel Media is distributed infrastructure\nsupporting the Channel Policy." as note_chan_media
+   }
+
+   node -down-> channel_api
+   channel_api -down- channel_endpoint
+   channel_endpoint -down-> channel_media
+   channel_operator -left-> channel_endpoint
+   node_operator -left-> node
+   channel_manager -left-> channel_operator
+   note_chan_keys .left. channel_media
+   channel_operator .down. note_chan_keys
+   channel_manager .down. note_chan_keys
+   channel_endpoint .left. note_chan_policy
+   note_chan_media .right. channel_media
 
 
 Jurisdiction
