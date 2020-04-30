@@ -12,21 +12,88 @@ Glossary
 |                   | more Nodes to send and receive messages to other      |
 |                   | Jurisdictions.                                        |
 +-------------------+-------------------------------------------------------+
-| Node              | A set of APIs that send and receive messages over     |
-|                   | channels. Nodes validate messages and route them      |
-|                   | to the appropriate channel. They also receive inbound |
-|                   | messages and retrieve the associated document (object)|
-|                   | and store these for Node Users                        |
+| Node API          | A set of APIs used to send and receive messages over  |
+|                   | channels.                                             |
++-------------------+-------------------------------------------------------+
+| Node              | Service that provides the Node API, sends messages    |
+|                   | (after validating them) to a channel on behalf of a   |
+|                   | jurisdiction, and recieves then disburses messages    |
+|                   | sent to the jurisdiction over the channels.           |
+|                   |                                                       |
+|                   | The Node is authorised (Node Accreditation) to send   |
+|                   | and recieve messages messages on behalf of the        |
+|                   | Jurisdiction. The node validates each messages to     |
+|                   | to ensure compliance with the channel policy (from    |
+|                   | the juridictional context). In other words, nodes are |
+|                   | trusted by the accrediting body to apply local        |
+|                   | knowledge to the interpretation of channel policy in  |
+|                   | that jurisdiction.                                    |
+|                   |                                                       |
+|                   | The Node is also a router. It decides which channel   |
+|                   | (Node Routing Policy) each valid message should be    |
+|                   | used to sent the message to the recipient             |
+|                   | Jurisdiction.                                         |
+|                   |                                                       |
+|                   | Nodes also receive inbound messages, retrieves the    |
+|                   | associated document (object) and store these for Node |
+|                   | Users, as well as notifying the appropriate Node      |
+|                   | when new messages have been received.                 |
+|                   |                                                       |
+|                   | - Nodes act on behalf of jurisdictions and are        |
+|                   |   authorised to do so by the jurisdiction (Node       |
+|                   |   Accreditation).                                     |
+|                   | - Messages are addressed to jurisdictions, not nodes. |
+|                   | - Node Users use the node to send a message to        |
+|                   |   another jurisdiction, not nodes or channels.        |
+|                   | - Node Operators may use trustbridge/intergov         |
+|                   |   software (reference implementation) or they may     |
+|                   |   create their own systems that comply with the open  |
+|                   |   standards.                                          |
+|                   |                                                       |
 +-------------------+-------------------------------------------------------+
 | Channel           | Implementation of an agreement between jurisdictions  |
 |                   | to exchange particular types of messages.             |
+|                   |                                                       |
+|                   | - Node Users should understand that all nodes on a    |
+|                   |   channel can potentially see all messages posted to  |
+|                   |   If there are multiple nodes acting on behalf of a   |
+|                   |   jurisdiction, and subscribed to a particular        |
+|                   |   channel, all of those nodes will receive all        |
+|                   |   messages addressed to that jurisdiction that are    |
+|                   |   posted to that channel.                             |
+|                   | - The "side-tree" protocol bundles multiple messages  |
+|                   |   in a single message on the wire. It is up to the    |
+|                   |   Node to unpackage these bundles. Other nodes, who   |
+|                   |   are not the recipient (Nodes from other             |
+|                   |   Jurisdictions) will NOT be able to access and       |
+|                   |   unbundle these messages.                            |
+|                   | - The channel implementation MAY validate some        |
+|                   |   aspects of the message, but the Node MUST send only |
+|                   |   valid messages to the channel. For example, a       |
+|                   |   Channel Endpoint may reject messages with invalid   |
+|                   |   sender or recipient juridisctions, or invalid       |
+|                   |   message predicates.                                 |
+|                   |                                                       |
 +-------------------+-------------------------------------------------------+
 | Channel Policy    | Rules, expressed in a common business language, that  |
 |                   | describe the acceptable use of the channel.           |
 +-------------------+-------------------------------------------------------+
 | Channel Media     | Append-only database where channel messages are       |
-|                   | written. Presumably a distributed database,           |
-|                   | e.g. blockchain.                                      |
+|                   | written. Presumably a distributed database.           |
+|                   |                                                       |
+|                   | - Channel media are pan-jurisdictional (not owned or  |
+|                   |   controlled by any one jurisdictions) and shared by  |
+|                   |   all the nodes.                                      |
+|                   | - Candidate technologies for Channel Media include    |
+|                   |   public blockchaim and private blockchain (when each |
+|                   |   Jurisdiction has appropriate access for Channel     |
+|                   |   Management and Operations.                          |
+|                   | - Channel media MAY convey cryptographic protocol     |
+|                   |   characteristics to the channel e.g. non-repudiation |
+|                   | - Channel media technology is generally unspecified,  |
+|                   |   to ensure Jurisdictions are free to negotiate the   |
+|                   |   most appropriate technology for a given channel.    |
+|                   |                                                       |
 +-------------------+-------------------------------------------------------+
 | Channel Endpoint  | Deployed system that can read and write to the        |
 |                   | channel media.                                        |
@@ -115,50 +182,3 @@ Notes
    node -up-> idp
    node_user -down-> idp
    node_user -down-> node_api
-
-Jurisdiction
-^^^^^^^^^^^^
-
-
-Node User
-^^^^^^^^^
-
-
-Messages
-^^^^^^^^
-
-
-Documents
-^^^^^^^^^
-
-
-Claim
-^^^^^
-
-
-Node
-^^^^
-
- - Nodes act on behalf of jurisdictions and are authorised to do so by the jurisdiction (Node Accreditation).
- - Messages are addressed to jurisdictions, not nodes.
- - Node Users use the node to send a message to another jurisdiction, not nodes or channels.
- - Node Operators may use trustbridge/intergov software or they may write their own.
-
-
-Channel
-^^^^^^^
-
- - The Node User must understand that all nodes on a channel can see all messages on the wire. If there are multiple nodes acting on behalf of a jurisdiction and subscribed to a particular channel, all of those nodes will receive all messages addressed to that jurisdiction that are posted to that channel.
- - The "side-tree" protocol bundles multiple messages in a single message on the wire. It is up to the Node to unpackage these bundles. Other nodes, who are not the recipient will NOT be able to access and unbundle these messages.
- - The channel implementation MAY validate but the Node MUST.
-
-
-Channel Endpoint
-^^^^^^^^^^^^^^^^
-
-
-Channel Medium
-^^^^^^^^^^^^^^
-
- - A channel medium is pan-jurisdictional (not owned or controlled by any one jurisdictions) and shared by all the nodes. Eg. public block chain.
- - Some channel medium MAY guarantee non-repudiation
