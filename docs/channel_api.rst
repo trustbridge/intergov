@@ -72,7 +72,9 @@ For example, if a node operator is operating private channel APIs for its own us
 
 A channel may have many nodes using it, but tens not 1000s.
 
-The current reference implementation at TODO assumes that the node operator is also the channel endpoint operator, therefore manual devops style auth configuration is fine (eg. subnet only networking/whitelisting IP addresses/API Gateway SIG4 certs etc...).
+.. note::
+
+   The current reference implementation at TODO-testnet assumes that the node operator is also the channel endpoint operator, therefore manual devops style auth configuration is fine (eg. subnet only networking/whitelisting IP addresses/API Gateway SIG4 certs etc...).
 
 
 Channel Posting API
@@ -182,17 +184,6 @@ Channel Receiving API
 | ``GET /messages?updated_since=2020-01-12Z123456&receiver=AU`` - includes new messages
 
 
-A typical BlockchainChannel:
- 
- - observes the blockchain and records new messages into a DB to keen track of what messages it has seen and what it hasn't
- - tells the subscription engine that a new message has arrived once a certain number of blocks are on top
-
-
-**TODO: document this better, in a better place? How does blockchain keep track of what it has and hasn't seen?**
-
-Store a pointer that keeps track of the last block inspected. If head is above pointer (walk through next blocks until end?), then we are on the main branch. If not, walk backwards until you find the fork and mark any messages as false alarm.
-
-
 .. uml::
 
    @startuml
@@ -222,6 +213,12 @@ States:
 
    + On a blockchain, this means we observed the message on a fork. We expect this to be extremely rare; it is a theoretical possibility.
    + On a DB, this shouldn't happen unless a message is deleted from the table.
+
+
+A typical BlockchainChannel:
+
+ - observes the blockchain and records new messages into a DB to keen track of what messages it has seen and what it hasn't
+ - tells the subscription engine that a new message has arrived once a certain number of blocks are on top
 
 
 Deploying a channel

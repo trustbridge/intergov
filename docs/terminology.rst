@@ -8,6 +8,16 @@ Glossary
 +-------------------+-------------------------------------------------------+
 | Term              | Description                                           |
 +===================+=======================================================+
+| Node Users        | Business Layer Systems that communicate with one or   |
+|                   | more Nodes to send and receive messages to other      |
+|                   | Jurisdictions.                                        |
++-------------------+-------------------------------------------------------+
+| Node              | A set of APIs that send and receive messages over     |
+|                   | channels. Nodes validate messages and route them      |
+|                   | to the appropriate channel. They also receive inbound |
+|                   | messages and retrieve the associated document (object)|
+|                   | and store these for Node Users                        |
++-------------------+-------------------------------------------------------+
 | Channel           | Implementation of an agreement between jurisdictions  |
 |                   | to exchange particular types of messages.             |
 +-------------------+-------------------------------------------------------+
@@ -129,26 +139,18 @@ Claim
 Node
 ^^^^
 
-Nodes act on behalf of jurisdictions and are authorised to do so by the jurisdiction.
-Messages are addressed to jurisdictions, not nodes.
-Node users use the node to send a message to another jurisdiction, not nodes or channels.
+ - Nodes act on behalf of jurisdictions and are authorised to do so by the jurisdiction (Node Accreditation).
+ - Messages are addressed to jurisdictions, not nodes.
+ - Node Users use the node to send a message to another jurisdiction, not nodes or channels.
+ - Node Operators may use trustbridge/intergov software or they may write their own.
 
 
 Channel
 ^^^^^^^
 
-Notes:
-
- - Posting a message to a channel is a broadcast mechanism; receivers need to determine if a message is meant for them or not
-If there are multiple nodes acting on behalf of a jurisdiction and subscribed to a particular channel, all of those nodes will receive all messages addressed to that jurisdiction that are posted to that channel.
-
- - Sender authorisation is implemented by the channel
- - Sender verification is the responsibility of the receiver
-
- - Non-repudiation may be guaranteed by the channel medium
-
-Question: Is posting to a channel always broadcast? Or may some channel mediums deliver only to the intended recipient?
-And are the above statements all true?
+ - The Node User must understand that all nodes on a channel can see all messages on the wire. If there are multiple nodes acting on behalf of a jurisdiction and subscribed to a particular channel, all of those nodes will receive all messages addressed to that jurisdiction that are posted to that channel.
+ - The "side-tree" protocol bundles multiple messages in a single message on the wire. It is up to the Node to unpackage these bundles. Other nodes, who are not the recipient will NOT be able to access and unbundle these messages.
+ - The channel implementation MAY validate but the Node MUST.
 
 
 Channel Endpoint
@@ -157,3 +159,6 @@ Channel Endpoint
 
 Channel Medium
 ^^^^^^^^^^^^^^
+
+ - A channel medium is pan-jurisdictional (not owned or controlled by any one jurisdictions) and shared by all the nodes. Eg. public block chain.
+ - Some channel medium MAY guarantee non-repudiation
