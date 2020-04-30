@@ -367,7 +367,7 @@ such that:
   operate against standard APIs,
   which hide the details of which actual channel is used.
 * Governments should be able to modify their channel implementations
-  in way that insultates their regulated community from the change.
+  in way that insulates their regulated community from the change.
   In other words, without impacting their users.
 * Makes it possible to integrate
   additional, new channels
