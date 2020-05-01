@@ -36,7 +36,7 @@ version = intergov.__version__
 release = intergov.__version__
 exclude_patterns = ['_build', '.venv']
 pygments_style = 'sphinx'
-html_theme = 'default'
+html_theme = 'alabaster'  #'default'
 html_static_path = ['_static']
 htmlhelp_basename = 'intergov_ledgerdoc'
 
