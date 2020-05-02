@@ -120,7 +120,7 @@ pipeline {
         success {
             script {
                 if ( env.BRANCH_NAME == 'master' ) {
-                    build job: '../cotp-devnet/build/master', parameters: [
+                    build job: '../cotp-devnet/build-intergov/master', parameters: [
                         string(name: 'branchref_intergov', value: "${GIT_COMMIT}")
                     ]
                 }
