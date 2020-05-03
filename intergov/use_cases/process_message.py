@@ -23,7 +23,7 @@ class ProcessMessageUseCase:
     * dispatch message sending task to channel-outbox
       (if the message is from a domestic source)
     * ensure the message is stored in the message lake
-    * ensure the access control lists are updated 
+    * ensure the access control lists are updated
       for this message
     * dispatch any WebSub events required for this message
 
@@ -102,6 +102,8 @@ class ProcessMessageUseCase:
             except Exception as e:
                 logger.exception(e)
                 pub_OK = False
+        else:
+            pub_OK = True
 
         # blockchain part - pass the message to the blockchain worker
         # so it can be shared to the foreign parties
