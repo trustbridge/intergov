@@ -109,7 +109,7 @@ class ProcessMessageUseCase:
         # so it can be shared to the foreign parties
         if message.status == 'pending':
             # not received from the foreign party = must be sent
-            logger.info("Sending this message out to the world")
+            logger.info("Sending message to the channels: %s", message.subject)
             try:
                 outbox_OK = self.blockchain_outbox_repo.post(message)
             except Exception as e:
@@ -122,10 +122,11 @@ class ProcessMessageUseCase:
         if message.status == 'received':
             # might need to download remote documents using the
             # Documents Spider
+            logger.info("Received message from the channels: %s", message.subject)
             if message.sender != self.country:
                 # if it's not loopback message (test installations only)
                 logger.info(
-                    "Scheduling download remote documents for %s", message
+                    "Scheduling download remote documents for: %s", message.subject
                 )
                 try:
                     ret_OK = self.object_retreval_repo.post_job({
@@ -138,7 +139,8 @@ class ProcessMessageUseCase:
                     ret_OK = False
             else:
                 logger.info(
-                    "Seems that this message is loopback (sent by us back to us)"
+                    "Seems that this message is loopback (sent by us back to us): %s",
+                    message.subject
                 )
 
         if ml_OK and acl_OK and ret_OK and pub_OK and outbox_OK:
