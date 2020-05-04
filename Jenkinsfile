@@ -55,10 +55,6 @@ pipeline {
 
             stages {
                 stage('Setup') {
-                    when {
-                        changeRequest()
-                    }
-
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
                             sh '''#!/bin/bash
@@ -125,6 +121,14 @@ pipeline {
                     ]
                 }
             }
+        }
+
+        failure {
+            slackSend (
+                message: "Testing Failed - ${BUILD_DISPLAY_NAME} (<${BUILD_URL}|Open>)\n Intergov Testing Failed",
+                channel: "#igl-automatic-messages",
+                color: "#B22222"
+            )
         }
 
         cleanup {
