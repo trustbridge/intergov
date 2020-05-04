@@ -36,7 +36,10 @@ pipeline {
         stage('Setup') {
             steps {
                 dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
-                    checkout scm
+                    script{
+                        def repoIntergov = checkout scm
+                        env.GIT_COMMIT = repoIntergov.GIT_COMMIT
+                    }
                 }
             }
         }
@@ -122,7 +125,7 @@ pipeline {
             script {
                 if ( env.BRANCH_NAME == 'master' ) {
                     build job: '../cotp-devnet/build-intergov/master', parameters: [
-                        string(name: 'branchref_intergov', value: "${GIT_COMMIT}")
+                        string(name: 'branchref_intergov', value: "${env.GIT_COMMIT}")
                     ]
                 }
             }
@@ -130,7 +133,7 @@ pipeline {
 
         failure {
             slackSend (
-                message: "Testing Failed - ${JOB_NAME} (<${BUILD_URL}|Open>)\n Intergov Testing Failed \n Branch: ${BRANCH_NAME} - ${GIT_COMMIT} \n PR: (<${CHANGE_URL}> | ${CHANGE_ID} - ${CHANGE_TITLE}>",
+                message: "Testing Failed - ${JOB_NAME} (<${BUILD_URL}|Open>)\n Intergov Testing Failed \n Branch: ${BRANCH_NAME} \n PR: (<${CHANGE_URL}> | ${CHANGE_ID} - ${CHANGE_TITLE}>",
                 channel: "#igl-automatic-messages",
                 color: "#B22222"
             )
