@@ -25,9 +25,9 @@ pipeline {
 
     parameters {
         booleanParam(
-            name: 'run_tests',
+            name: 'run_integration_tests',
             defaultValue: false,
-            description: 'Run tests for all components'
+            description: 'Run integration tests for all components'
         )
     }
 
@@ -44,15 +44,6 @@ pipeline {
 
         stage('Testing') {
 
-            when {
-                anyOf {
-                    branch 'master'
-                    changeRequest()
-                    equals expected: true, actual: params.run_tests
-                }
-            }
-
-
             stages {
                 stage('Setup') {
                     steps {
@@ -68,37 +59,51 @@ pipeline {
                     }
                 }
 
-                stage('Run Testing') {
+                stage('Run Testing - Unit') {
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/")  {
                             sh '''#!/bin/bash
                                 python3.6 pie.py intergov.tests.unit
-                                python3.6 pie.py intergov.tests.integration
                             '''
                         }
                     }
+                }
 
-                    post {
-                        always {
-                            dir("${env.DOCKER_BUILD_DIR}/test/intergov/"){
-                                publishHTML(
-                                    [
-                                        allowMissing: true,
-                                        alwaysLinkToLastBuild: true,
-                                        keepAll: true,
-                                        reportDir: 'htmlcov',
-                                        reportFiles: 'index.html',
-                                        reportName: 'Intergov Coverage Report',
-                                        reportTitles: ''
-                                    ]
-                                )
-                            }
+                stage('Run Testing - Integration') {
+                    when {
+                        anyOf {
+                            changeRequest()
+                            equals expected: true, actual: params.run_integration_tests
+                        }
+                    }
+
+
+                    steps {
+                        dir("${env.DOCKER_BUILD_DIR}/test/intergov/")  {
+                            sh '''#!/bin/bash
+                                python3.6 pie.py intergov.tests.integration
+                            '''
                         }
                     }
                 }
             }
 
             post {
+                always {
+                    dir("${env.DOCKER_BUILD_DIR}/test/intergov/"){
+                        publishHTML(
+                            [
+                                allowMissing: true,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'htmlcov',
+                                reportFiles: 'index.html',
+                                reportName: 'Intergov Coverage Report',
+                                reportTitles: ''
+                            ]
+                        )
+                    }
+                }
                 cleanup {
                     dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
                         sh '''#!/bin/bash
