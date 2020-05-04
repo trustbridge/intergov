@@ -130,7 +130,7 @@ pipeline {
 
         failure {
             slackSend (
-                message: "Testing Failed - ${BUILD_DISPLAY_NAME} (<${BUILD_URL}|Open>)\n Intergov Testing Failed",
+                message: "Testing Failed - ${JOB_NAME} (<${BUILD_URL}|Open>)\n Intergov Testing Failed \n Branch: ${BRANCH_NAME} - ${GIT_COMMIT} \n PR: (<${CHANGE_URL}> | ${CHANGE_ID} - ${CHANGE_TITLE}>",
                 channel: "#igl-automatic-messages",
                 color: "#B22222"
             )
