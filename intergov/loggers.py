@@ -9,14 +9,18 @@ SENTRY_DSN = env('SENTRY_DSN', default=None)
 
 if SENTRY_DSN:  # pragma: no cover
     sentry_logging = LoggingIntegration(
-        level=logging.INFO,        # Capture info and above as breadcrumbs
-        event_level=logging.ERROR  # Send errors as events
+        level=logging.INFO,  # Capture info and above as breadcrumbs
+        event_level=logging.WARNING  # Send errors as events
     )
 
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[sentry_logging]
     )
+
+    with sentry_sdk.configure_scope() as scope:
+        scope.set_tag("service", "intergov")
+        scope.set_tag("country", env("ICL_APP_COUNTRY", default=""))
 
 
 LOGGING = {
