@@ -11,8 +11,9 @@ import json
 import random
 import time
 
-from intergov.conf import env, env_postgres_config, env_queue_config
+from intergov.conf import env_postgres_config, env_queue_config
 from intergov.repos.api_outbox import ApiOutboxRepo
+from intergov.repos.api_outbox.postgres_objects import Message as PostgresMessageRepr
 from intergov.repos.channel_pending_message import ChannelPendingMessageRepo
 from intergov.repos.message_updates import MessageUpdatesRepo
 from intergov.loggers import logging
@@ -121,11 +122,11 @@ class MultiChannelBlockchainWorker(object):
     def __next__(self):
         try:
 
-            msg = self.blockchain_outbox_repo.get_next_pending_message()
-            if not msg:
+            pg_msg = self.blockchain_outbox_repo.get_next_pending_message()
+            if not pg_msg:
                 return None
-            logger.info("Processing message %s (%s)", msg, msg.id)
-            self.blockchain_outbox_repo.patch(msg.id, {'status': 'sending'})
+            logger.info("Processing message %s (%s)", pg_msg, pg_msg.id)
+            self.blockchain_outbox_repo.patch(pg_msg.id, {'status': 'sending'})
 
             # If not result message wasn't posted to channel
             # it looks like ok situation from the use case point of view
@@ -133,8 +134,17 @@ class MultiChannelBlockchainWorker(object):
             # BUT we probably want to change status of the message in
             # blockchain_outbox_repo
 
+            # first we convert message from the
+            # intergov.repos.api_outbox.postgres_objects.Message
+            # to
+            # intergov.domain.wire_protocolsgeneric_discrete.Message
+            assert isinstance(pg_msg, PostgresMessageRepr)
+            gd_msg = gd.Message.from_dict(
+                pg_msg.to_dict()
+            )
+
             try:
-                result = self.uc.execute(msg)
+                result = self.uc.execute(gd_msg)
             except Exception:
                 time.sleep(random.randint(1, 6))
                 raise
@@ -143,10 +153,10 @@ class MultiChannelBlockchainWorker(object):
             channel_id, channel_response = result
             logger.info(f'Channel[{channel_id}]: {channel_response}')
 
-            self._push_message_to_channel_pending_message_repo(channel_id, channel_response, msg)
-            self._push_message_to_channel_message_updater(channel_id, channel_response, msg)
+            self._push_message_to_channel_pending_message_repo(channel_id, channel_response, pg_msg)
+            self._push_message_to_channel_message_updater(channel_id, channel_response, pg_msg)
 
-            if self.blockchain_outbox_repo.patch(msg.id, {'status': 'accepted'}):
+            if self.blockchain_outbox_repo.patch(pg_msg.id, {'status': 'accepted'}):
                 logger.info("The message has been sent to channel")
             else:
                 logger.info("The message has been sent but failed to update msg in outbox")

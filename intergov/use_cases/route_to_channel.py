@@ -39,6 +39,14 @@ class RouteToChannelUseCase:
             channel_filter = channel.channel_filter
             if not channel_filter.screen_message(message):
                 response = channel.post_message(message)
+                if isinstance(response, bool):
+                    # such a stupid way to work with things,
+                    # but upper use-case expects that, and some channels return Bool,
+                    # so...
+                    response = (
+                        '{"status": %s, '
+                        '"link": "dumbid=http://non-domain.non-tld"}'
+                    ) % 'true' if response else 'false'
                 return channel.ID, response
 
         return False

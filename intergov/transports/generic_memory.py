@@ -23,6 +23,7 @@ class GenericMemoryTransport:
         if channel_filter:
             if channel_filter.screen_message(msg):
                 return False
+        assert isinstance(msg, gd.Message), msg.__class__
         if not msg.is_valid():
             return False
         datum = msg.to_dict()
