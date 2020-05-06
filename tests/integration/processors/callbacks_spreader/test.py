@@ -1,8 +1,10 @@
+import inject
+from websub.processors import CallbacksSpreaderProcessor
+
 from intergov.conf import env_s3_config, env_queue_config
 from intergov.repos.delivery_outbox import DeliveryOutboxRepo
 from intergov.repos.notifications import NotificationsRepo
 from intergov.repos.subscriptions import SubscriptionsRepo
-from intergov.processors.callbacks_spreader import CallbacksSpreaderProcessor
 from tests.unit.domain.wire_protocols.test_generic_message import (
     _generate_msg_object
 )
@@ -23,7 +25,6 @@ SUBSCRIPTIONS = {
     'ggg': 1
 }
 
-
 SUBSCRIPTIONS_WITH_COMMON_PREFIXES = {
     'ooo': {
         'ooo.aaa.bbb': 2,
@@ -40,7 +41,7 @@ def _fill_subscriptions_repo(repo, subscriptions):
     overal = 0
     for predicate, number in subscriptions.items():
         overal += number
-        url_tail = predicate.replace('.', '-')+"-{}"
+        url_tail = predicate.replace('.', '-') + "-{}"
         url = CALLBACK_URL.format(url_tail)
         for i in range(number):
             assert repo.post(url.format(i), predicate, DEFAULT_EXPIRATION)
@@ -52,7 +53,6 @@ def _is_predicate_in_url(url, predicate):
 
 
 def test():
-
     # testing predicate in url search
 
     delivery_outbox_repo = DeliveryOutboxRepo(DELIVERY_OUTBOX_REPO_CONF)
@@ -67,11 +67,14 @@ def test():
     assert delivery_outbox_repo._unsafe_is_empty_for_test()
     assert subscriptions_repo._unsafe_is_empty_for_test()
 
-    processor = CallbacksSpreaderProcessor(
-        notifications_repo_conf=NOTIFICATIONS_REPO_CONF,
-        delivery_outbox_repo_conf=DELIVERY_OUTBOX_REPO_CONF,
-        subscriptions_repo_conf=SUBSCRIPTIONS_REPO_CONF
-    )
+    def bind_repos(binder):
+        binder.bind('DeliveryOutboxRepo', delivery_outbox_repo)
+        binder.bind('NotificationsRepo', notifications_repo)
+        binder.bind('SubscriptionsRepo', subscriptions_repo)
+
+    inject.clear_and_configure(bind_repos)
+
+    processor = CallbacksSpreaderProcessor()
 
     # testing that iter returns processor
     assert iter(processor) is processor
@@ -91,14 +94,14 @@ def test():
         # pushing notification
         message = _generate_msg_object(predicate=predicate)
         notifications_repo.post_job(message)
-        # test proccessor received notification
+        # test processor received notification
         assert next(processor) is True
 
         # test processor created correct number of delivery jobs
         # each subscriptions group has unique topic/predicate
         for i in range(number_of_subscribers):
             job = delivery_outbox_repo.get_job()
-            assert job, f"Call:{i+1}. Predicate:{predicate}"
+            assert job, f"Call:{i + 1}. Predicate:{predicate}"
             message_queue_id, payload = job
             # test that only direct subscribers received this message
             assert payload.get('payload', {}).get('predicate') == predicate
@@ -139,3 +142,5 @@ def test():
             assert _is_predicate_in_url(url, prefix), {'url': url, 'prefix': prefix}
             assert delivery_outbox_repo.delete(message_queue_id)
         assert next(processor) is None
+
+    inject.clear()
