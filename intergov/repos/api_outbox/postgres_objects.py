@@ -28,3 +28,14 @@ class Message(Base):
 
     def __str__(self):
         return self.subject
+
+    def to_dict(self):
+        return {
+            'sender': self.sender,
+            'receiver': self.receiver,
+            'subject': self.subject,
+            'obj': self.obj,
+            'predicate': self.predicate,
+            'sender_ref': self.sender_ref,
+            'status': self.status,
+        }
