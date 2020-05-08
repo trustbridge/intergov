@@ -207,17 +207,6 @@ services:
     command: bash -c "cd /src & sleep 10 &&
       python intergov/processors/callback_deliver/__init__.py"
 
-  # loopback_bch_worker:
-  #   # to be disabled once we have a normal worker working
-  #   <<: *base_service
-  #   container_name: loopback_bch_worker
-  #   restart: on-failure
-  #   environment:
-  #     - PYTHONPATH=/src/
-  #     - PYTHONUNBUFFERED=1
-
-  #   command: bash -c "cd /src & sleep 11 &&
-  #     python intergov/processors/loopback_bch_worker/__init__.py"
 
   ###########################################################################
   # the next 5 containers are bound to the in memory channel used in the POC #

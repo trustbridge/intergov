@@ -21,7 +21,7 @@ from intergov.domain.wire_protocols import generic_discrete as gd
 from intergov.use_cases.route_to_channel import RouteToChannelUseCase
 from intergov.channels.discrete_generic_memory import DiscreteGenericMemoryChannel
 
-logger = logging.getLogger('multichannel_bch_worker')
+logger = logging.getLogger('multichannel_router')
 
 # this is a kludge
 # we need some kind of configured registry
@@ -169,12 +169,6 @@ class MultiChannelBlockchainWorker(object):
 
 
 if __name__ == '__main__':  # pragma: no cover
-    # To start it manually, from the base dir:
-    # export IGL_PROC_BCH_OUTBOX_REPO_HOST=127.0.0.1
-    # export IGL_PROC_BCH_OUTBOX_REPO_USER=postgres
-    # export IGL_PROC_BCH_OUTBOX_REPO_DBNAME=api_outbox
-    # export IGL_PROC_BCH_MESSAGE_RX_API_URL="http://localhost:5100/messages"
-    # PYTHONPATH="`pwd`" python intergov/processors/loopback_bch_worker/__init__.py
     for result in MultiChannelBlockchainWorker():
         if result is None:
             time.sleep(1)
