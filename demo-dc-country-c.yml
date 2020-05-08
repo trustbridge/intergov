@@ -203,17 +203,6 @@ services:
     command: bash -c "cd /src & sleep 10 &&
       python intergov/processors/callback_deliver/__init__.py"
 
-  cnloopback_bch_worker:
-    # to be disabled once we have a normal worker working
-    <<: *base_service
-    container_name: cnloopback_bch_worker
-    restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
-      - PYTHONUNBUFFERED=1
-    command: bash -c "cd /src & sleep 11 &&
-      python intergov/processors/loopback_bch_worker/__init__.py"
-
   cnrejected_messages_processor:
     <<: *base_service
     container_name: cnrejected_messages_processor
