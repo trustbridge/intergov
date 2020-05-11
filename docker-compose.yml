@@ -211,15 +211,15 @@ services:
   ###########################################################################
   # the next 5 containers are bound to the in memory channel used in the POC #
   ###########################################################################
-  multichannel_bch_router:
+  multichannel_router:
     <<: *base_service
-    container_name: multichannel_bch_router
+    container_name: multichannel_router
     restart: on-failure
     environment:
       - PYTHONPATH=/src/
       - PYTHONUNBUFFERED=1
     command: bash -c "cd /src & sleep 5 &&
-      python intergov/processors/blockchain_router/__init__.py"
+      python intergov/processors/multichannel_router/__init__.py"
 
   # bch_observer:
   #   <<: *base_service

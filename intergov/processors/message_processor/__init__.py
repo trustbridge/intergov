@@ -49,7 +49,7 @@ class InboundMessageProcessor(object):
             notifications_repo_conf.update(conf)
         self.notifications_repo = NotificationsRepo(notifications_repo_conf)
 
-    def _prepare_blockchain_outbox_repo(self, conf):
+    def _prepare_channel_outbox_repo(self, conf):
         blockchain_outbox_repo_conf = env_postgres_config('PROC_BCH_OUTBOX_REPO')
         if conf:
             blockchain_outbox_repo_conf.update(conf)
@@ -80,7 +80,7 @@ class InboundMessageProcessor(object):
         self._prepare_object_acl_repo(object_acl_repo_conf)
         self._prepare_object_retrieval_repo(object_retrieval_repo_conf)
         self._prepare_notifications_repo(notifications_repo_conf)
-        self._prepare_blockchain_outbox_repo(blockchain_outbox_repo_conf)
+        self._prepare_channel_outbox_repo(blockchain_outbox_repo_conf)
         self._prepare_use_cases()
 
     def __iter__(self):
