@@ -13,7 +13,7 @@ This is a core component.
 It is responsible for routing messages between Governments
 (using the appropriate channel).
 
-.. autoclass:: intergov.processors.blockchain_router.MultiChannelBlockchainWorker
+.. autoclass:: intergov.processors.multichannel_router.MultichannelWorker
 
 Note: channels abstract over topology, technology and wire protocols.
 This means that countries are free
@@ -91,8 +91,8 @@ as per the operating countries agreements.
 .. autoclass:: intergov.use_cases.route_to_channel.RouteToChannelUseCase
 
 .. TODO: refactor the rest of the logic into another use-case
-   rather than having it 
-	       
+   rather than having it
+
 This process needs to be slightly more complicated
 than it might seem at first.
 Channels need to be potentially asynchronous.
