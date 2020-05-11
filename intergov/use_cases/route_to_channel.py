@@ -27,26 +27,72 @@ class RouteToChannelUseCase:
     that is more friendly to administrators.
     """
 
-    def __init__(self, channel_config):
-        self.channels = []
-        for config in channel_config:
-            channel = config['type']
-            self.channels.append(channel(config))
+    def __init__(self, routing_table):
+        self.ROUTING_TABLE = routing_table
+        # self.channel_config = channel_config
+        # self.channels = []
+        # for config in channel_config:
+        #     channel = config['type']
+        #     self.channels.append(channel(config))
 
     @statsd_timer("usecase.RouteToChannelUseCase.execute")
     def execute(self, message):
-        for channel in self.channels:
-            channel_filter = channel.channel_filter
-            if not channel_filter.screen_message(message):
-                response = channel.post_message(message)
-                if isinstance(response, bool):
-                    # such a stupid way to work with things,
-                    # but upper use-case expects that, and some channels return Bool,
-                    # so...
-                    response = (
-                        '{"status": %s, '
-                        '"link": "dumbid=http://non-domain.non-tld"}'
-                    ) % 'true' if response else 'false'
-                return channel.ID, response
+        # This is new logic, assuming that channels are dumb.
+        # so routing table is a set of scalar values with channel details,
+        # and use-case itself does all active (and boring) actions to send message.
+        # New logic could be easily converted to the smart channels approach by moving the code.
 
-        return False
+        # we return True if at least one channel accepted the message and False otherwise
+        has_been_sent = False
+
+        for routing_rule in self.ROUTING_TABLE:
+            # for all channels we find one which could accept that message
+            # based on receiver
+            receiver = str(message.receiver)
+            if routing_rule["Jurisdiction"] == receiver:
+                # this one fits
+                channel_instance = routing_rule["ChannelInstance"]
+                if channel_instance.screen_message(message):
+                    logger.info(
+                        "[%s] Channel %s screens the message",
+                        message.sender_ref,
+                        routing_rule,
+                    )
+                    continue
+                logger.info(
+                    "[%s] Message will be sent to channel %s",
+                    message.sender_ref,
+                    str(channel_instance),
+                )
+                result = channel_instance.post_message(message)
+                if result:
+                    # seems to be a success
+                    logger.info(
+                        "[%s] Message has been sent to the channel %s with result %s",
+                        message.sender_ref,
+                        str(channel_instance),
+                        result
+                    )
+                    has_been_sent = True
+                else:
+                    logger.warning(
+                        "[%s] Channel %s didn't accept the message",
+                        message.sender_ref,
+                        str(channel_instance),
+                    )
+
+        # Some old logic here
+        # for channel in self.channels:
+        #     channel_filter = channel.channel_filter
+        #     if not channel_filter.screen_message(message):
+        #         response = channel.post_message(message)
+        #         if isinstance(response, bool):
+        #             # such a stupid way to work with things,
+        #             # but upper use-case expects that, and some channels return Bool,
+        #             # so...
+        #             response = (
+        #                 '{"status": %s, '
+        #                 '"link": "dumbid=http://non-domain.non-tld"}'
+        #             ) % 'true' if response else 'false'
+        #         return channel.ID, response
+        return has_been_sent
