@@ -197,7 +197,7 @@ def test_patch_success(NotificationsRepoMock, MessageLakeRepoMock, client):
 
         assert message_lake_repo.get.call_count == 2
         message_lake_repo.update_metadata.assert_called_once_with(sender, sender_ref, {'status': status})
-        notifications_repo.post_job.assert_called_once()
+        notifications_repo.post_job.call_count == 3  # 3 types of msg notifications for each one
 
 
 @mock.patch(MESSAGE_LAKE_REPO)
