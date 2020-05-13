@@ -11,10 +11,11 @@ local storage - postgres for example (and for the demo)
 import random
 import time
 
-from intergov.conf import env_postgres_config, env
+from intergov.conf import env, env_postgres_config, env_queue_config
 from intergov.channels.http_api_channel import HttpApiChannel
 from intergov.repos.api_outbox import ApiOutboxRepo
 from intergov.repos.api_outbox.postgres_objects import Message as PostgresMessageRepr
+from intergov.repos.message_updates import MessageUpdatesRepo
 from intergov.loggers import logging
 from intergov.domain.wire_protocols import generic_discrete as gd
 from intergov.use_cases.route_to_channel import RouteToChannelUseCase
@@ -84,11 +85,15 @@ class MultichannelWorker(object):
             outbox_repo_conf.update(conf)
         self.outbox_repo = ApiOutboxRepo(outbox_repo_conf)
 
-    # def _prepare_message_updates_repo(self, conf):
-    #     message_updates_repo_conf = env_queue_config('BCH_MESSAGE_UPDATES')
-    #     if conf:
-    #         message_updates_repo_conf.update(conf)
-    #     self.message_updates_repo = MessageUpdatesRepo(message_updates_repo_conf)
+    def _prepare_message_updates_repo(self, conf):
+        # This repo used to talk to the message updater microservice,
+        # which just changes statuses in the message lake
+        repo_conf = env_queue_config('MCHR_MESSAGE_UPDATES_REPO', use_default=False)
+        if not repo_conf:
+            repo_conf = env_queue_config('BCH_MESSAGE_UPDATES')
+        if conf:
+            repo_conf.update(conf)
+        self.message_updates_repo = MessageUpdatesRepo(repo_conf)
 
     # def _prepare_channel_pending_message_repo(self, conf):
     #     channel_pending_message_repo_conf = env_queue_config('PROC_BCH_CHANNEL_PENDING_MESSAGE')
@@ -109,15 +114,15 @@ class MultichannelWorker(object):
             routing_rule["ChannelInstance"] = HttpApiChannel(routing_rule.copy())
         return
 
-    def _message_to_dict(self, msg):
-        return {
-            gd.SENDER_KEY: msg.sender,
-            gd.RECEIVER_KEY: msg.receiver,
-            gd.SUBJECT_KEY: msg.subject,
-            gd.OBJ_KEY: msg.obj,
-            gd.PREDICATE_KEY: msg.predicate,
-            gd.SENDER_REF_KEY: msg.sender_ref
-        }
+    # def _message_to_dict(self, msg):
+    #     return {
+    #         gd.SENDER_KEY: msg.sender,
+    #         gd.RECEIVER_KEY: msg.receiver,
+    #         gd.SUBJECT_KEY: msg.subject,
+    #         gd.OBJ_KEY: msg.obj,
+    #         gd.PREDICATE_KEY: msg.predicate,
+    #         gd.SENDER_REF_KEY: msg.sender_ref
+    #     }
 
     # def _push_message_to_channel_pending_message_repo(self, channel_id, channel_response, msg):
     #     if channel_id == DiscreteGenericMemoryChannel.ID:
@@ -130,22 +135,28 @@ class MultichannelWorker(object):
     #         )
     #     return False
 
-    # def _push_message_to_channel_message_updater(self, channel_id, channel_response, msg):
-    #     if channel_id == DiscreteGenericMemoryChannel.ID:
-    #         channel_response = json.loads(channel_response)
-    #         channel_txn_id = channel_response['link'].split('=')[1]
-    #     else:
-    #         return False
-    #     return self.message_updates_repo.post_job(
-    #         {
-    #             'message': self._message_to_dict(msg),
-    #             'patch': {
-    #                 gd.CHANNEL_ID_KEY: channel_id,
-    #                 gd.CHANNEL_TXN_ID_KEY: channel_txn_id
-    #             }
-    #         },
-    #         delay_seconds=10
-    #     )
+    def _update_message_status(self, msg, new_status, channel_id=None, channel_msg_id=None):
+        # In the message lake
+        # if channel_id == DiscreteGenericMemoryChannel.ID:
+        #     channel_response = json.loads(channel_response)
+        #     channel_txn_id = channel_response['link'].split('=')[1]
+        # else:
+        #     return False
+        patch_data = {
+            gd.STATUS_KEY: new_status,
+        }
+        if channel_id and channel_msg_id:
+            patch_data.update({
+                gd.CHANNEL_ID_KEY: channel_id,
+                gd.CHANNEL_TXN_ID_KEY: channel_msg_id,
+            })
+        return self.message_updates_repo.post_job(
+            {
+                'message': msg.to_dict(),
+                'patch': patch_data
+            },
+            delay_seconds=random.randint(2, 7)
+        )
 
     def __init__(
         self,
@@ -157,7 +168,7 @@ class MultichannelWorker(object):
         # self._prepare_config(config)
         self._prepare_outbox_repo(outbox_repo_conf)
         # self._prepare_channel_pending_message_repo(channel_pending_message_repo_conf)
-        # self._prepare_message_updates_repo(message_updates_repo_conf)
+        self._prepare_message_updates_repo(message_updates_repo_conf)
         self._prepare_use_cases()
         self._prepare_channels()
 
@@ -208,7 +219,16 @@ class MultichannelWorker(object):
 
             if result:
                 # message has been sent somewhere
-                logger.info("[%s] The message has been sent to channel", gd_msg.sender_ref)
+                recipient_channel_id, recipient_channel_message_id = result
+                logger.info(
+                    "[%s] The message has been sent to channel %s",
+                    gd_msg.sender_ref, recipient_channel_id
+                )
+                self._update_message_status(
+                    gd_msg, new_status="accepted",
+                    channel_id=recipient_channel_id,
+                    channel_msg_id=recipient_channel_message_id
+                )
                 if not self.outbox_repo.patch(pg_msg.id, {'status': 'accepted'}):
                     logger.warning("[%s] Failed to update msg in outbox", gd_msg.sender_ref)
                     result = False
@@ -217,18 +237,9 @@ class MultichannelWorker(object):
             else:
                 # no channel accepted the message or there was other error
                 logger.info("[%s] Message has NOT been sent", gd_msg.sender_ref)
+                self._update_message_status(gd_msg, "rejected")
                 self.outbox_repo.patch(pg_msg.id, {'status': 'rejected'})
                 result = False
-
-            logger.warning(
-                "[%s] Although we have updated status of the message  - "
-                "nobody knows about that (need to send that WebSub event)",
-                gd_msg.sender_ref
-            )
-            # TODO: now we send event about message {gd_msg.sender_ref}
-            # (light), so any interested party can re-retrieve it and do something
-            # first use case: chambers app sent the message gets that update and
-            # understands that status has changed from "pending" tp "sent/rejected"
             return result
 
         except Exception as e:

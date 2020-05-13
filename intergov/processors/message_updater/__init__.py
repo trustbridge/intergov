@@ -54,20 +54,25 @@ class MessageUpdater(object):
         if resp.status_code == HTTPStatus.NOT_FOUND:
             if retry + 1 > retry_max:
                 # this should probably be at least WARN level
-                logger.info('Message not found. Max retries reached.')
+                logger.warning('[%s] Message not found. Max retries reached.', sender_ref)
                 return True
-            logger.info('Message not found. Schedule retry')
+            logger.warning('[%s] Message not found. Schedule retry', sender_ref)
             job['retry'] = retry + 1
             self.message_updates_repo.post_job(job, delay_seconds=30)
             return True
         if resp.status_code == HTTPStatus.CONFLICT:
-            logger.info('Patch causing conflic with the current message state.')
+            logger.warning('[%s] Patch causing conflict with the current message state.', sender_ref)
             return True
         if resp.status_code != HTTPStatus.OK:
-            raise RuntimeError(
-                f"Can't patch the message reason:{resp.text}"
+            retry_number = retry + 1
+            logger.error(
+                "[%s] Can't patch the message: %s; sheduling retry %s of %s",
+                sender_ref, resp.text, retry_number, retry_max,
             )
-        logger.info('Message patched successfully.')
+            job['retry'] = retry_number
+            self.message_updates_repo.post_job(job, delay_seconds=30)
+            return True
+        logger.info('[%s] Message patched successfully.', sender_ref)
         return True
 
     def __init__(

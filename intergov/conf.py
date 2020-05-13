@@ -192,7 +192,7 @@ def env_s3_config(prefix):
     return config
 
 
-def env_queue_config(prefix):
+def env_queue_config(prefix, use_default=True):
     """
     Usage:
     BC_INBOX_CONF = env_queue_config('MSG_RX_API_BC_INBOX')
@@ -200,6 +200,14 @@ def env_queue_config(prefix):
     Full-default configuration is made for docker-compose.yml elasticmq instance
     But can be easily replaced to external SQS either globally
     """
+
+    # used for migrations from old variable names to the new ones,
+    # so first new one is checked, and only when not provided - the old one
+    # (resp. default ones) are used
+    has_variable_set = env(f'IGL_{prefix}_HOST', default=False)
+    if not has_variable_set and not use_default:
+        return None
+
     config = {
         'use_ssl': env_bool(
             f'IGL_{prefix}_USE_SSL',

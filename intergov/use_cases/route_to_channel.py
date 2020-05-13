@@ -42,8 +42,8 @@ class RouteToChannelUseCase:
         # and use-case itself does all active (and boring) actions to send message.
         # New logic could be easily converted to the smart channels approach by moving the code.
 
-        # we return True if at least one channel accepted the message and False otherwise
-        has_been_sent = False
+        # we return message ID if at least one channel accepted the message and False otherwise
+        result = False
 
         for routing_rule in self.ROUTING_TABLE:
             # for all channels we find one which could accept that message
@@ -64,16 +64,17 @@ class RouteToChannelUseCase:
                     message.sender_ref,
                     str(channel_instance),
                 )
-                result = channel_instance.post_message(message)
-                if result:
+                channel_result = channel_instance.post_message(message)
+                if channel_result:
                     # seems to be a success
                     logger.info(
                         "[%s] Message has been sent to the channel %s with result %s",
                         message.sender_ref,
                         str(channel_instance),
-                        result
+                        channel_result
                     )
-                    has_been_sent = True
+                    result = (str(channel_instance), channel_result)
+                    break  # don't try to use other channels while at least one succeeded
                 else:
                     logger.warning(
                         "[%s] Channel %s didn't accept the message",
@@ -95,4 +96,4 @@ class RouteToChannelUseCase:
         #                 '"link": "dumbid=http://non-domain.non-tld"}'
         #             ) % 'true' if response else 'false'
         #         return channel.ID, response
-        return has_been_sent
+        return result
