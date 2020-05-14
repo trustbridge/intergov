@@ -75,7 +75,7 @@ class PatchMessageMetadataUseCase:
         # send status change notification if status updated
         if metadata_delta.get(gd.STATUS_KEY):
             # for customers subscribed on the topic `message.status.change`
-            # (which is too wide)
+            # (which is quite wide), pings with the message subject and new status
             self.notification_repo.post_job(
                 {
                     # required
@@ -89,22 +89,16 @@ class PatchMessageMetadataUseCase:
             # for customers subscribed on the specific message topics
             # These are light, so containing no useful message information
             # apart of the identifier
-
-            # because subject can contain dots we just remove them
-            # (which is fine while subscribers also remove them when subscribing)
-            # Also for subject it's logical to subscribe to ".created" instead of ".status"
-            # but ".status" also works (if subscribers are aware)
             self.notification_repo.post_job(
                 {
-                    gd.PREDICATE_KEY: f'message.{str(message.subject).replace(".", "")}.status',
-                    gd.SUBJECT_KEY: str(message.subject),
+                    # The logic is "there is message status change with that topic"
+                    "topic": f'/subject/{str(message.subject)}/status',
+                    "sender_ref": str(message.sender_ref),
                 }
             )
-            # a normal status change
             self.notification_repo.post_job(
                 {
-                    gd.PREDICATE_KEY: f'message.{message.sender_ref}.status',
-                    gd.SUBJECT_KEY: str(message.subject),
+                    "topic": f'/message/{message.sender_ref}/status',
                 }
             )
         # return updated version of the message

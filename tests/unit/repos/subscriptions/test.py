@@ -32,9 +32,9 @@ def test_repo_utils(boto3, datetime_mock):
     # error should be not empty
     with pytest.raises(ValueError):
         repo._pattern_to_key('')
-    # error should not contain slashes
-    with pytest.raises(ValueError):
-        repo._pattern_to_key('aa/bb')
+    # # error should not contain slashes UPD: it's fine now
+    # with pytest.raises(ValueError):
+    #     repo._pattern_to_key('aa/bb')
     assert repo._pattern_to_key('aaaa.bbbb.cccc') == "AAAA/BBBB/CCCC/"
     assert repo._pattern_to_key('aaaa.bbbb.cccc.*') == repo._pattern_to_key('aaaa.bbbb.cccc')
     assert repo._pattern_to_key('aaaa.bbbb.cccc.') == repo._pattern_to_key('aaaa.bbbb.cccc')

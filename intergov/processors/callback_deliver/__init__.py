@@ -29,7 +29,7 @@ class CallbacksDeliveryProcessor(object):
         self._prepare_use_cases()
 
     def __iter__(self):
-        logger.info("Starting the outbound callbacks processor")
+        logger.info("Starting the outbound callbacks deliverer")
         return self
 
     def __next__(self):

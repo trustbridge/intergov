@@ -12,7 +12,7 @@ class DispatchMessageToSubscribersUseCase:
     Used by the callbacks spreader worker.
 
     This is the "fan-out" part of the WebSub,
-    where each event dispatched 
+    where each event dispatched
     to all the relevant subscribers.
     For each event (notification),
     it looks-up the relevant subscribers
@@ -25,7 +25,7 @@ class DispatchMessageToSubscribersUseCase:
     by the delivery outbox message queue.
 
     Note: In this application
-    the subscription signature 
+    the subscription signature
     is based on the message predicate.
     """
 
@@ -50,11 +50,20 @@ class DispatchMessageToSubscribersUseCase:
         # which may be empty
         # or just a dict which must be sent as a callback directly
         message = message_job.get('message')
-        predicate = message_job.get('predicate') or message.predicate
-        assert predicate
+        if isinstance(message_job, dict) and "topic" in message_job:
+            topic = message_job["topic"]
+            assert topic
+            predicate = None
+        else:
+            predicate = message_job.get('predicate') or message.predicate
+            assert predicate
+            topic = None
+
+        # not both at once
+        assert bool(predicate) != bool(topic)
 
         # find the subscribers for this predicate
-        subscribers = self._get_subscribers(predicate)
+        subscribers = self._get_subscribers(predicate or topic)
 
         # what is worse, multiple delivery or lost messages?
         # here we assume lost messages are worse
@@ -86,8 +95,8 @@ class DispatchMessageToSubscribersUseCase:
         else:
             return False
 
-    def _get_subscribers(self, predicate):
-        subscribers = self.subscriptions.search(predicate, layered=True)
+    def _get_subscribers(self, predicate_or_topic):
+        subscribers = self.subscriptions.search(predicate_or_topic, layered=True)
         if not subscribers:
-            logger.info("Nobody to notify about the message %s", predicate)
+            logger.info("Nobody to notify about the %s", predicate_or_topic)
         return subscribers

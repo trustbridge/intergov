@@ -45,16 +45,27 @@ class SubscriptionsRepo(miniorepo.MinioRepo):
         if not predicate_pattern:
             raise ValueError("non-empty predicate is required")
         if '/' in predicate_pattern:
-            raise ValueError("predicate should contain dots, not slashes")
-        if predicate_pattern.endswith('.'):
-            # drop the pointless dot at the end
-            predicate_pattern = predicate_pattern[:-1]
-        if predicate_pattern.endswith('*'):
-            # drop the pointless dot at the end
-            predicate_pattern = predicate_pattern[:-1]
-            assert predicate_pattern.endswith('.'), "* character is supported only after a dot"
-        predicate_parts = predicate_pattern.upper().split('.')
-        return '/'.join([p for p in predicate_parts if p]) + '/'
+            # predicate is a topic
+            topic_pattern = predicate_pattern
+            predicate_pattern = None
+        else:
+            # predicate is a predicate
+            topic_pattern = None
+        if predicate_pattern:
+            if predicate_pattern.endswith('.'):
+                # drop the pointless dot at the end
+                predicate_pattern = predicate_pattern[:-1]
+            if predicate_pattern.endswith('*'):
+                predicate_pattern = predicate_pattern[:-1]
+                assert predicate_pattern.endswith('.'), "* character is supported only in the last part"
+            predicate_parts = predicate_pattern.upper().split('.')
+            return '/'.join([p for p in predicate_parts if p]) + '/'
+        elif topic_pattern:
+            topic_pattern = topic_pattern.strip("/")
+            if topic_pattern.endswith('*'):
+                topic_pattern = topic_pattern[:-1]
+                assert topic_pattern.endswith('/'), "* character is supported only in the last part"
+            return topic_pattern
 
     def _pattern_to_layers(self, predicate_pattern):
         layers = []

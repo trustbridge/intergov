@@ -56,7 +56,7 @@ class CallbacksSpreaderProcessor(object):
         self._prepare_use_cases()
 
     def __iter__(self):
-        logger.info("Starting the outbound callbacks processor")
+        logger.info("Starting the outbound callbacks spreader")
         return self
 
     def __next__(self):

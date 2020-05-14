@@ -41,8 +41,8 @@ class DeliverCallbackUseCase:
         payload = job.get('payload')
 
         retry_number = int(job.get('retry', 0))
-        # second line of defence. Just in case
 
+        # second line of defence. TODO: do not schedule and re-write that test if it fails
         if retry_number > self.MAX_RETRIES:
             logger.error(
                 "Dropping notification %s about %s due to max retries reached",
@@ -67,34 +67,35 @@ class DeliverCallbackUseCase:
             # quite strange, may be the same message is being processed twice
             # or it's already exhausted it's retry count on the
             # queue broker side
-            logger.error(
+            logger.warning(
                 "Unable to delete message %s from the delivery_outbox",
                 queue_msg_id
             )
             return False
 
         if not is_delivered:
-            # @Neketek: I think it's better to not post the job at all instead of filtering it
             if retry_number + 1 > self.MAX_RETRIES:
                 logger.error(
-                    "Dropping notification %s about %s due to max retries reached",
+                    "Delivery failed and has reached the max retry count, "
+                    "not re-scheduling it (%s, %s)",
                     subscribe_url,
                     payload
                 )
                 return False
-            logger.info("Delivery failed, re-schedule it")
-            self.delivery_outbox.post_job(
-                {
-                    's': subscribe_url,
-                    'payload': payload,
-                    'retry': retry_number + 1
-                },
-                # put it to the end of queue and with some nice delay
-                # TODO: delay = retry_number * 30 + random.randint(0, 100)
-                # for real cases (it's too slow for development)
-                delay_seconds=random.randint(1, 10)
-            )
-            return False
+            else:
+                logger.info("Delivery failed, re-scheduling it (%s)", subscribe_url)
+                self.delivery_outbox.post_job(
+                    {
+                        's': subscribe_url,
+                        'payload': payload,
+                        'retry': retry_number + 1
+                    },
+                    # put it to the end of queue and with some nice delay
+                    # TODO: delay = retry_number * 30 + random.randint(0, 100)
+                    # for real cases (it's too slow for development)
+                    delay_seconds=random.randint(1, 10)
+                )
+                return False
 
         return True
 
