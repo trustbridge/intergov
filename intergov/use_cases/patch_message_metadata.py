@@ -10,11 +10,9 @@ logger = logging.getLogger(__name__)
 
 class PatchMessageMetadataUseCase:
     """
-    Used by the message retrieve endpoint
+    Used by the message patch endpoint
 
-    Receive the msg_id which is the string like:
-    {sender}:{sender_ref}
-    and return the message object (parsed, with status and other fields)
+    Get the message, update it in the message lake.
     """
 
     def __init__(self, message_lake_repo, notification_repo):
@@ -50,7 +48,7 @@ class PatchMessageMetadataUseCase:
         if new_status and new_status != message.status:
             if message.status in gd.FINAL_STATUSES:
                 raise ConflictError(
-                    detail=f'Message status is final:{message.status}'
+                    detail=f'Message status is final: {message.status}'
                 )
             metadata_delta[gd.STATUS_KEY] = new_status
 
@@ -76,6 +74,8 @@ class PatchMessageMetadataUseCase:
         )
         # send status change notification if status updated
         if metadata_delta.get(gd.STATUS_KEY):
+            # for customers subscribed on the topic `message.status.change`
+            # (which is too wide)
             self.notification_repo.post_job(
                 {
                     # required
@@ -84,6 +84,27 @@ class PatchMessageMetadataUseCase:
                     gd.SUBJECT_KEY: str(message.subject),
                     # business payload
                     gd.STATUS_KEY: str(new_status),
+                }
+            )
+            # for customers subscribed on the specific message topics
+            # These are light, so containing no useful message information
+            # apart of the identifier
+
+            # because subject can contain dots we just remove them
+            # (which is fine while subscribers also remove them when subscribing)
+            # Also for subject it's logical to subscribe to ".created" instead of ".status"
+            # but ".status" also works (if subscribers are aware)
+            self.notification_repo.post_job(
+                {
+                    gd.PREDICATE_KEY: f'message.{str(message.subject).replace(".", "")}.status',
+                    gd.SUBJECT_KEY: str(message.subject),
+                }
+            )
+            # a normal status change
+            self.notification_repo.post_job(
+                {
+                    gd.PREDICATE_KEY: f'message.{message.sender_ref}.status',
+                    gd.SUBJECT_KEY: str(message.subject),
                 }
             )
         # return updated version of the message

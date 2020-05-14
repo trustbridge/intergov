@@ -66,9 +66,9 @@ class HttpApiChannel:
             headers=self._get_headers(),
         )
         if str(resp.status_code).startswith("2"):
-            result = True
             # this ID has any meaning only for channel and notifications from it
             ch_msg_id = resp.json().get("id") or None
+            result = ch_msg_id
             logger.info(
                 "Have sent %s with resp %s, message ID is %s",
                 message.sender_ref, resp.json(), ch_msg_id
