@@ -1,12 +1,8 @@
-from unittest import mock
+from libtrustbridge.utils.conf import env_queue_config
+from libtrustbridge.websub.processors import Processor
+from libtrustbridge.websub.repos import DeliveryOutboxRepo
 
-from intergov.conf import env_queue_config
-# from intergov.domain.wire_protocols.generic_discrete import (
-#     Message
-# )
-from intergov.processors.callback_deliver import CallbacksDeliveryProcessor
 from intergov.use_cases import DeliverCallbackUseCase
-from intergov.repos.delivery_outbox import DeliveryOutboxRepo
 from tests.unit.domain.wire_protocols.test_generic_message import (
     _generate_msg_dict
 )
@@ -39,12 +35,11 @@ def _test_retries(processor, max_attempts):
 
 def test_callback_delivery():
     delivery_outbox_repo = DeliveryOutboxRepo(DELIVERY_OUTBOX_REPO_CONF)
+    use_case = DeliverCallbackUseCase(delivery_outbox_repo)
     # clearing test queue
     delivery_outbox_repo._unsafe_clear_for_test()
     assert not delivery_outbox_repo.get()
-    processor = CallbacksDeliveryProcessor(
-        delivery_outbox_repo_conf=DELIVERY_OUTBOX_REPO_CONF
-    )
+    processor = Processor(use_case=use_case)
     # testing that iter returns processor
     assert processor is iter(processor)
     # testing no jobs in the queue

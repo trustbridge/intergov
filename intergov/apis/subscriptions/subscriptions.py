@@ -6,18 +6,10 @@ from flask import (
     Response
 )
 
-
-from intergov.apis.common import errors
-from intergov.apis.common.utils import routing
-from intergov.repos.subscriptions.minio.miniorepo import SubscriptionsRepo
-from intergov.monitoring import statsd_timer
-from intergov.use_cases import (
-    SubscriptionDeregisterUseCase,
-    SubscriptionRegisterUseCase,
-)
-
-from .conf import Config
-from .constants import (
+from libtrustbridge import errors
+from libtrustbridge.utils import routing
+from libtrustbridge.websub.repos import SubscriptionsRepo
+from libtrustbridge.websub.constants import (
     TOPIC_ATTR_KEY,
     CALLBACK_ATTR_KEY,
     LEASE_SECONDS_ATTR_KEY,
@@ -31,8 +23,7 @@ from .constants import (
     SUPPORTED_CALLBACK_URL_SCHEMES,
     ATTRS_DEFAULTS
 )
-
-from .exceptions import (
+from libtrustbridge.websub.exceptions import (
     UnknownModeError,
     UnableToPostSubscriptionError,
     SubscriptionExistsError,
@@ -42,11 +33,19 @@ from .exceptions import (
     LeaseSecondsValidationError
 )
 
+from intergov.monitoring import statsd_timer
+from intergov.use_cases import (
+    SubscriptionDeregisterUseCase,
+    SubscriptionRegisterUseCase,
+)
+
+from .conf import Config
+
 blueprint = Blueprint('subscriptions', __name__)
 
 
 def _deregister_subscription(form):
-    repo = SubscriptionsRepo()
+    repo = SubscriptionsRepo(Config.SUBSCR_REPO_CONF)
     use_case = SubscriptionDeregisterUseCase(repo)
     result = use_case.execute(form[CALLBACK_ATTR_KEY], form[TOPIC_ATTR_KEY])
     if not result:

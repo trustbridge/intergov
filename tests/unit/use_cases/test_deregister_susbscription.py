@@ -5,7 +5,7 @@ from intergov.use_cases import SubscriptionDeregisterUseCase
 USE_CASE_ARGS = ("http://url.com/callback", "UN.CEFACT.*")
 
 
-def test_exectute():
+def test_execute():
     repo = mock.MagicMock()
 
     repo.delete.return_value = 1
