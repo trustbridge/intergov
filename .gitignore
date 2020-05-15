@@ -11,3 +11,6 @@ demo-local-cn.env
 /var/
 .venv/
 
+# for easy local development
+intergov/libtrustbridge/
+
