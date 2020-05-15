@@ -1,7 +1,7 @@
 from flask import Flask, Response
+from libtrustbridge.errors import handlers
+from libtrustbridge.utils.loggers import logging
 
-from intergov.apis.common.errors import handlers
-from intergov.loggers import logging  # NOQA
 
 logger = logging.getLogger('dummy-test-helper')
 
