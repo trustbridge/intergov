@@ -4,6 +4,10 @@ from libtrustbridge.websub.repos import SubscriptionsRepo
 from intergov.monitoring import statsd_timer
 
 
+class SubscriptionNotFound(Exception):
+    pass
+
+
 class SubscriptionDeregisterUseCase:
     """
     Used by the subscription API
@@ -17,5 +21,9 @@ class SubscriptionDeregisterUseCase:
     @statsd_timer("usecase.SubscriptionDeregisterUseCase.execute")
     def execute(self, url, predicate):
         pattern = Pattern(predicate=predicate)
+        subscriptions = self.subscriptions_repo.get_subscriptions_by_pattern(pattern)
+        subscriptions_by_url = [s for s in subscriptions if s.callback_url == url]
+        if not subscriptions_by_url:
+            raise SubscriptionNotFound()
         self.subscriptions_repo.bulk_delete([pattern.to_key(url)])
 

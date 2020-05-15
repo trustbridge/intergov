@@ -38,6 +38,7 @@ from intergov.use_cases import (
     SubscriptionDeregisterUseCase,
     SubscriptionRegisterUseCase,
 )
+from intergov.use_cases.subscription_deregister import SubscriptionNotFound
 
 from .conf import Config
 
@@ -47,9 +48,10 @@ blueprint = Blueprint('subscriptions', __name__)
 def _deregister_subscription(form):
     repo = SubscriptionsRepo(Config.SUBSCR_REPO_CONF)
     use_case = SubscriptionDeregisterUseCase(repo)
-    result = use_case.execute(form[CALLBACK_ATTR_KEY], form[TOPIC_ATTR_KEY])
-    if not result:
-        raise SubscriptionNotFoundError()
+    try:
+        use_case.execute(form[CALLBACK_ATTR_KEY], form[TOPIC_ATTR_KEY])
+    except SubscriptionNotFound as e:
+        raise SubscriptionNotFoundError() from e
     return Response(
         status=StatusCode.ACCEPTED
     )

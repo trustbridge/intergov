@@ -24,7 +24,7 @@ def test_delivery_enqueued(valid_message_dicts):
     delivery_outbox = mock.Mock()
     delivery_outbox.post_job.return_value = True
     subscriptions = mock.Mock()
-    subscriptions.search.return_value = ['https://foo.com/bar', ]
+    subscriptions.get_subscriptions_by_pattern.return_value = {mock.Mock(callback_url='https://foo.com/bar'), }
     use_case = DispatchMessageToSubscribersUseCase(
         notifications,
         delivery_outbox,
@@ -43,7 +43,7 @@ def test_notifications_empty_no_send(valid_message_dicts):
     notifications.get_job.return_value = ()
     delivery_outbox = mock.Mock()
     subscriptions = mock.Mock()
-    subscriptions.search.return_value = ['https://foo.com/bar', ]
+    subscriptions.get_subscriptions_by_pattern.return_value = {mock.Mock(callback_url='https://foo.com/bar'), }
     use_case = DispatchMessageToSubscribersUseCase(
         notifications,
         delivery_outbox,
@@ -60,7 +60,7 @@ def test_delivery_outbox_post_fail_no_delete(valid_message_dicts):
     delivery_outbox = mock.Mock()
     delivery_outbox.post_job.return_value = False  # post failed
     subscriptions = mock.Mock()
-    subscriptions.search.return_value = ['https://foo.com/bar', ]
+    subscriptions.get_subscriptions_by_pattern.return_value = {mock.Mock(callback_url='https://foo.com/bar'), }
     use_case = DispatchMessageToSubscribersUseCase(
         notifications,
         delivery_outbox,
@@ -72,11 +72,11 @@ def test_delivery_outbox_post_fail_no_delete(valid_message_dicts):
 
 def random_urls(*kwargs, **args):
     return [
-        "https://{}.{}/{}".format(
+        mock.Mock(callback_url="https://{}.{}/{}".format(
             uuid.uuid4(),
             random.choice(['com', 'net', 'org', 'com.au', 'gov.au']),
             uuid.uuid4()
-        ) for x in range(6)]
+        )) for x in range(6)]
 
 
 def test_multiple_descriptions(valid_message_dicts):
@@ -86,7 +86,7 @@ def test_multiple_descriptions(valid_message_dicts):
     delivery_outbox = mock.Mock()
     delivery_outbox.post_job.return_value = False  # post failed
     subscriptions = mock.Mock()
-    subscriptions.search.side_effect = random_urls
+    subscriptions.get_subscriptions_by_pattern.side_effect = random_urls
     use_case = DispatchMessageToSubscribersUseCase(
         notifications,
         delivery_outbox,
