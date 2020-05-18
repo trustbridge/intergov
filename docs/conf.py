@@ -5,15 +5,11 @@ import os
 
 cwd = os.getcwd()
 project_root = os.path.dirname(cwd)
-# modules = ('intergov',)
-# for module in modules:
-#    mod = os.path.join(project_root, module)
-sys.path.insert(0, project_root)
+modules = ('intergov',)
+for module in modules:
+   mod = os.path.join(project_root, module)
 
-# import intergov  # noqa
-# TODO: fix this hack
-class intergov:
-    __version__ = '0.1.0'
+import intergov  # noqa
 
 
 extensions = [
@@ -38,28 +34,3 @@ exclude_patterns = ['_build', '.venv']
 pygments_style = 'sphinx'
 html_theme = 'alabaster'  #'default'
 html_static_path = ['_static']
-htmlhelp_basename = 'intergov_ledgerdoc'
-
-latex_elements = {
-    'papersize': 'a4paper',
-}
-latex_documents = [
-    ('index', 'intergov_ledger.tex',
-     u'Intergov Ledger Documentation',
-     u'Chris Gough', 'manual'),
-]
-
-man_pages = [
-    ('index', 'intergov_ledger',
-     u'Intergov Ledger Documentation',
-     [u'Chris Gough'], 1)
-]
-
-texinfo_documents = [
-    ('index', 'intergov_ledger',
-     u'Intergov Ledger Documentation',
-     u'Chris Gough',
-     'intergov_ledger',
-     'One line description of project.',
-     'Miscellaneous'),
-]
