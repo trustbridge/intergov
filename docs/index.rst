@@ -7,6 +7,7 @@ Intergov Ledger
 
    purpose
    terminology
+   architecture
    public_apis
    events
    outbound

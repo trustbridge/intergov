@@ -1,0 +1,56 @@
+digraph d {
+node [shape=component style=filled fillcolor=grey];
+
+subgraph cluster_app {
+    label="application";
+    ucp_doc [label="manage\ndocuments" shape=ellipse];
+}
+
+doc_api [label="document\nAPI" shape=component];
+ucp_doc -> doc_api;
+
+repo_object_lake [label="<<s3>>\nobject\nlake" fillcolor=orange];
+repo_object_acl [label="<<s3>>\nobject\nACL" fillcolor=orange];
+repo_object_ret_q [
+    label="<<sqs>>\nobject\nretreival"
+    fillcolor=green
+];
+
+repo_foreign_objects [label="foreign\nobject\nproxy"];
+uc_get_objects -> repo_foreign_objects;
+
+uc_authenticated_object_access [
+    label="authenticated\nobject access"
+    shape=ellipse
+    fillcolor=orange
+];
+doc_api -> uc_authenticated_object_access -> repo_object_acl;
+uc_authenticated_object_access -> repo_object_lake;
+uc_record_object [
+    label="record\nobject"
+    shape=ellipse
+    fillcolor=orange
+];
+doc_api -> uc_record_object -> repo_object_lake;
+
+
+uc_bc_proc_events [
+    label="initiate\ninbound message\nprocessing tasks"
+    shape=ellipse
+    fillcolor=green
+];
+repo_object_acl -> uc_bc_proc_events [dir=back];
+repo_object_ret_q -> uc_bc_proc_events [dir=back];
+
+uc_get_objects [
+    label="retrieve and store\nforeign documents"
+    shape=ellipse
+    fillcolor=green
+];
+
+repo_object_lake -> uc_get_objects [dir=back];
+repo_object_ret_q -> uc_get_objects [dir=back];
+
+spider [label="<<docker>>\ndocument\nspider"];
+uc_get_objects -> spider [dir=back];
+}
