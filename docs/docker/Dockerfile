@@ -7,5 +7,9 @@ RUN apt-get update && \
     apt-get -y install enchant && \
     apt-get -y install plantuml
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# copy requirements into the image
+RUN mkdir -p docs/docker
+COPY docs/docker/requirements.txt docs/docker/
+COPY requirements/ requirements/
+# and install them
+RUN pip install --no-cache-dir -r docs/docker/requirements.txt

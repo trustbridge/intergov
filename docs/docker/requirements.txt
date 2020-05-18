@@ -2,3 +2,6 @@ sphinx
 sphinx-autobuild
 sphinxcontrib-spelling
 sphinxcontrib-plantuml
+
+-r ../../requirements/prod.txt
+-r ../../requirements/test.txt
