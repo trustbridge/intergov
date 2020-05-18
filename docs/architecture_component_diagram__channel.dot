@@ -1,0 +1,59 @@
+digraph d {
+node [shape=component style=filled fillcolor=grey];
+
+local_node [label="<<Intergov>>\nNode"];
+
+channel_endpoint [label="<<Flask API>>\nChannel Endpoint\nand\nSubscription Hub", fillcolor=green];
+sending_db [label="<<DB>>\nSending DB", fillcolor=lightblue];
+receiving_db [label="<<DB>>\nReceiving DB", fillcolor=lightblue];
+
+channel_media [label="<<blockchain>>\nChannel Media", fillcolor=purple];
+
+subscription_processor [label="<<lambda>>\nSubscription\nProcessor", fillcolor=green];
+subscription_store [label="<<s3>>\nSubscription\nStore", fillcolor=lightblue];
+callback_spreader [label="<<lambda>>\nCallback\nSpreader", fillcolor=green];
+subscription_event_queue [label="<<sqs>>\nSubscription\nEvent Queue", fillcolor=lightblue];
+
+
+# grouping for nicer display
+subgraph node_channel_interface{
+    rank="same"
+    channel_endpoint
+    callback_spreader
+}
+
+subgraph channel_stores{
+    rank="same"
+    sending_db
+    receiving_db
+    subscription_store
+}
+
+
+# Efferent messages
+# node posts to channel
+local_node -> channel_endpoint;
+channel_endpoint -> sending_db;
+channel_endpoint -> channel_media;
+# node subscribe to updates about that message
+// local_node -> channel_endpoint;
+channel_endpoint -> subscription_store;
+# subscription processor delivers events
+subscription_processor -> sending_db;
+subscription_processor -> subscription_event_queue;
+callback_spreader -> subscription_event_queue;
+callback_spreader -> local_node;
+
+# Afferent messages
+# channel observes new messages
+// channel_endpoint -> channel_media;
+channel_endpoint -> receiving_db;
+# node subscribes to new messages
+// local_node -> channel_endpoint;
+// channel_endpoint -> subscription_store;
+# subscription processor delivers events
+subscription_processor -> receiving_db;
+// subscription_processor -> subscription_event_queue;
+// callback_spreader -> subscription_event_queue;
+// callback_spreader -> local_node;
+}

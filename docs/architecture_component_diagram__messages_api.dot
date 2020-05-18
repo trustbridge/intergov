@@ -1,0 +1,99 @@
+digraph d {
+node [shape=component style=filled fillcolor=grey];
+
+subgraph cluster_app {
+    label="application";
+    ucp_sub [label="manage\nsubscriptions" shape=ellipse];
+    ucp_msg [label="manage\nmessages" shape=ellipse];
+    uc_rx_callback [label="receive\ncallback" shape=ellipse];
+}
+
+msg_api [label="message\nAPI" shape=component];
+ucp_msg -> msg_api;
+
+repo_api_outbox [label="<<rdbms>>\nAPI\noutbox" fillcolor=green];
+repo_api_inbox [label="<<sqs>>\nAPI\ninbox" fillcolor=green];
+repo_bc_inbox [label="<<sqs>>\nblockchain\ninbox" fillcolor=green];
+subgraph cluster_ws {
+   websub [label="subscription\nAPI (websub)" fillcolor=purple];
+}
+repo_message_lake [label="<<s3>>\nmessage\nlake" fillcolor=orange];
+
+ucp_sub -> websub;
+
+uc_submit_message [
+    label="post message\nto api inbox"
+    shape=ellipse
+    fillcolor=orange
+];
+uc_check_message [
+    label="get message\nby reference id"
+    shape=ellipse
+    fillcolor=orange
+];
+msg_api -> uc_check_message -> repo_message_lake;
+msg_api -> uc_submit_message -> repo_api_inbox;
+
+uc_api_inout [
+    label="enqueue\ninbound\nmessages"
+    shape=ellipse fillcolor=green
+];
+repo_api_inbox -> uc_api_inout [dir=back];
+repo_api_outbox -> uc_api_inout [dir=back];
+w_api_inout [label="<<docker>>\nmessage\nreception\nworker"];
+uc_api_inout -> w_api_inout;
+
+mcu [label="<<docker>>\nmulti-channel\nblockchain\nrouter"];
+uc_bc_tx_submit [
+    label="submit\nblockchain\ntransactions"
+    shape=ellipse
+    fillcolor=orange
+];
+repo_rejected_messages [
+    label="<<sqs>>\nrejected\nmessages"
+    fillcolor=green
+];
+mcu -> uc_bc_tx_submit;
+uc_bc_tx_submit -> repo_api_outbox;
+uc_bc_tx_submit -> channel;
+uc_bc_tx_submit -> repo_rejected_messages;
+
+uc_update_status_rejected [
+    label="update status\nof rejected\nmessages"
+    shape=ellipse
+    fillcolor=orange
+];
+repo_rejected_messages -> uc_update_status_rejected [dir=back];
+repo_message_lake -> uc_update_status_rejected [dir=back];
+w_status_updater [label="<<docker>>\nrejected\nstatus\nupdater"]
+uc_update_status_rejected -> w_status_updater [dir=back];
+
+mp [label="<<docker>>\ninbound\nmessage\nprocessor"]
+uc_bc_proc_events [
+    label="initiate\ninbound message\nprocessing tasks"
+    shape=ellipse
+    fillcolor=green
+];
+repo_bc_inbox -> uc_bc_proc_events [dir=back];
+uc_bc_proc_events -> mp [dir=back];
+websub -> uc_bc_proc_events [dir=back];
+repo_message_lake -> uc_bc_proc_events [dir=back];
+
+uc_rx_callback -> websub [dir=back];
+
+uc_enqueue_received_message [
+    label="enqueue\nreceived\nmessage"
+    shape=ellipse
+    fillcolor=green
+];
+repo_bc_inbox -> uc_enqueue_received_message [dir=back];
+reception_api [label="message\nreception\nAPI"]
+uc_enqueue_received_message -> reception_api [dir=back];
+
+channel [
+    label="channel"
+    shape=cloud
+];
+channel -> reception_api;
+
+}
