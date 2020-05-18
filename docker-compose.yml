@@ -130,10 +130,10 @@ services:
     <<: *base_service
     container_name: dummy-test-helper-server
     environment:
-      - PYTHONPATH=/src/:/src/tests/helpers/servers/
+      - PYTHONPATH=/src/:/src/intergov/:/src/tests/helpers/servers/
     ports: ['5001:5001']
     command: bash -c "cd /src/tests/helpers/servers &&
-      FLASK_ENV=development FLASK_APP=dummy_test_helper
+      FLASK_APP=dummy_test_helper
       flask run --host=0.0.0.0 --port=5001"
 
   message_rx_api:
@@ -144,7 +144,7 @@ services:
       - minio
     ports: ['5100:5100']
     command: bash -c "cd /src/intergov &&
-      FLASK_ENV=development FLASK_APP=apis.message_rx.app
+      FLASK_APP=apis.message_rx.app
       flask run --host=0.0.0.0 --port=5100"
 
   message_api:
@@ -155,7 +155,7 @@ services:
       - minio
     ports: ['5101:5101']
     command: bash -c "cd /src/intergov &&
-      FLASK_ENV=development FLASK_APP=apis.message.app
+      FLASK_APP=apis.message.app
       flask run --host=0.0.0.0 --port=5101"
 
   subscriptions_api:
@@ -163,7 +163,7 @@ services:
     container_name: intergov_subscriptions_api
     ports: ['5102:5102']
     command: bash -c "cd /src/intergov &&
-      FLASK_ENV=development FLASK_APP=apis.subscriptions.app
+      FLASK_APP=apis.subscriptions.app
       flask run --host=0.0.0.0 --port=5102"
 
   document_api:
@@ -171,7 +171,7 @@ services:
     container_name: intergov_document_api
     ports: ['5103:5103']
     command: bash -c "cd /src/intergov &&
-      FLASK_ENV=development FLASK_APP=apis.document.app
+      FLASK_APP=apis.document.app
       flask run --host=0.0.0.0 --port=5103"
     networks:
       - internal
@@ -184,8 +184,6 @@ services:
     <<: *base_service
     container_name: proc_inbound_message
     restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
     command: bash -c "cd /src & sleep 8 &&
       python intergov/processors/message_processor/__init__.py"
 
@@ -193,17 +191,14 @@ services:
     <<: *base_service
     container_name: proc_callbacks_spreader
     restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
-    command: bash -c "cd /src & sleep 9 &&
-      python intergov/processors/callbacks_spreader/__init__.py"
+    command: bash -c "
+      sleep 9 &&
+      python /src/intergov/processors/callbacks_spreader/__init__.py"
 
   proc_callback_deliver:
     <<: *base_service
     container_name: proc_callback_deliver
     restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
     command: bash -c "cd /src & sleep 10 &&
       python intergov/processors/callback_deliver/__init__.py"
 
@@ -215,9 +210,6 @@ services:
     <<: *base_service
     container_name: multichannel_router
     restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
-      - PYTHONUNBUFFERED=1
     command: bash -c "cd /src & sleep 5 &&
       python intergov/processors/multichannel_router/__init__.py"
 
@@ -225,9 +217,6 @@ services:
   #   <<: *base_service
   #   container_name: bch_observer
   #   restart: on-failure
-  #   environment:
-  #     - PYTHONPATH=/src/
-  #     - PYTHONUNBUFFERED=1
   #   command: bash -c "cd /src & sleep 5 &&
   #     python intergov/processors/blockchain_observer/__init__.py"
 
@@ -235,8 +224,6 @@ services:
     <<: *base_service
     container_name: rejected_messages_processor
     restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
     command: bash -c "cd /src & sleep 10 &&
       python intergov/processors/rejected_status_updater/__init__.py"
 
@@ -244,8 +231,6 @@ services:
     <<: *base_service
     container_name: channel_poller
     restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
     command: bash -c "cd /src & sleep 3 &&
       python intergov/processors/channel_poller/__init__.py"
 
@@ -253,16 +238,12 @@ services:
     <<: *base_service
     container_name: message_updater
     restart: on-failure
-    environment:
-      - PYTHONPATH=/src/
     command: bash -c "cd /src & sleep 3 &&
       python intergov/processors/message_updater/__init__.py"
 
   obj_spider:
     <<: *base_service
     container_name: obj_spider
-    environment:
-      - PYTHONPATH=/src/
     command: bash -c "cd /src & sleep 11 &&
       python intergov/processors/obj_spider/__init__.py"
     networks:

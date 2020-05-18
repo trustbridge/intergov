@@ -1,7 +1,9 @@
 import random
 import requests
 
-from intergov.loggers import logging  # NOQA
+from libtrustbridge.utils.loggers import logging  # NOQA
+from libtrustbridge.websub import repos
+
 from intergov.monitoring import statsd_timer
 
 logger = logging.getLogger(__name__)
@@ -23,7 +25,7 @@ class DeliverCallbackUseCase:
 
     MAX_RETRIES = 2
 
-    def __init__(self, delivery_outbox_repo):
+    def __init__(self, delivery_outbox_repo: repos.DeliveryOutboxRepo):
         self.delivery_outbox = delivery_outbox_repo
 
     def execute(self):
@@ -128,4 +130,5 @@ class DeliverCallbackUseCase:
                 url,
                 resp.status_code
             )
+            logger.error(resp.text)
             return False

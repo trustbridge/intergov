@@ -1,50 +1,28 @@
 import time
 
-from intergov.conf import env_queue_config
-from intergov.repos.delivery_outbox import DeliveryOutboxRepo
-from intergov.use_cases import DeliverCallbackUseCase
+from libtrustbridge.utils.loggers import logging
+from libtrustbridge.utils.conf import env_queue_config
+from libtrustbridge.websub.processors import Processor
+from libtrustbridge.websub.repos import DeliveryOutboxRepo
 
-from intergov.loggers import logging
+from intergov.use_cases import DeliverCallbackUseCase
 
 logger = logging.getLogger('callback_deliver')
 
 
-class CallbacksDeliveryProcessor(object):
-    """
-    Iterate over the DeliverCallbackUseCase.
-    """
-    def _prepare_delivery_outbox_repo(self, conf):
-        delivery_outbox_repo_conf = env_queue_config('PROC_DELIVERY_OUTBOX_REPO')
-        if conf:
-            delivery_outbox_repo_conf.update(conf)
-        self.delivery_outbox_repo = DeliveryOutboxRepo(delivery_outbox_repo_conf)
-
-    def _prepare_use_cases(self):
-        self.uc = DeliverCallbackUseCase(
-            delivery_outbox_repo=self.delivery_outbox_repo,
-        )
-
-    def __init__(self, delivery_outbox_repo_conf=None):
-        self._prepare_delivery_outbox_repo(delivery_outbox_repo_conf)
-        self._prepare_use_cases()
-
-    def __iter__(self):
-        logger.info("Starting the outbound callbacks processor")
-        return self
-
-    def __next__(self):
-        try:
-            result = self.uc.execute()
-        except Exception as e:
-            logger.exception(e)
-            result = None
-        return result
+def get_processor():
+    delivery_outbox_repo_conf = env_queue_config('PROC_DELIVERY_OUTBOX_REPO')
+    delivery_outbox_repo = DeliveryOutboxRepo(delivery_outbox_repo_conf)
+    use_case = DeliverCallbackUseCase(
+        delivery_outbox_repo=delivery_outbox_repo,
+    )
+    return Processor(use_case=use_case)
 
 
 if __name__ == '__main__':  # pragma: no cover
     # To start it manually, from the base dir:
     # PYTHONPATH="`pwd`" python intergov/processors/callback_deliver/__init__.py
-    for result in CallbacksDeliveryProcessor():
+    for result in get_processor():
         # no message was processed, might not have been any, sleep
         # or the exception has been raised, sleep as well
         if result is None:

@@ -1,5 +1,7 @@
 import json
 
+from libtrustbridge.websub import repos
+
 from intergov.loggers import logging
 from intergov.monitoring import statsd_timer
 from intergov.serializers import generic_discrete_message as ser
@@ -12,7 +14,7 @@ class DispatchMessageToSubscribersUseCase:
     Used by the callbacks spreader worker.
 
     This is the "fan-out" part of the WebSub,
-    where each event dispatched 
+    where each event dispatched
     to all the relevant subscribers.
     For each event (notification),
     it looks-up the relevant subscribers
@@ -25,13 +27,14 @@ class DispatchMessageToSubscribersUseCase:
     by the delivery outbox message queue.
 
     Note: In this application
-    the subscription signature 
+    the subscription signature
     is based on the message predicate.
     """
 
     def __init__(
-            self, notifications_repo,
-            delivery_outbox_repo, subscriptions_repo):
+            self, notifications_repo: repos.NotificationsRepo,
+            delivery_outbox_repo: repos.DeliveryOutboxRepo,
+            subscriptions_repo: repos.SubscriptionsRepo):
         self.notifications = notifications_repo
         self.delivery_outbox = delivery_outbox_repo
         self.subscriptions = subscriptions_repo
@@ -71,11 +74,13 @@ class DispatchMessageToSubscribersUseCase:
             payload = message_job
 
         for s in subscribers:
+            if not s.is_valid:
+                continue
             job = {
-                's': s,  # subscribed callback url
+                's': s.callback_url,  # subscribed callback url
                 'payload': payload  # the payload to be sent to the callback
             }
-            logger.info("Scheduling notification of \n[%s] with payload \n%s", s, payload)
+            logger.info("Scheduling notification of \n[%s] with payload \n%s", s.callback_url, payload)
             status = self.delivery_outbox.post_job(job)
             if not status:
                 all_OK = False
@@ -87,7 +92,8 @@ class DispatchMessageToSubscribersUseCase:
             return False
 
     def _get_subscribers(self, predicate):
-        subscribers = self.subscriptions.search(predicate, layered=True)
+        pattern = repos.Pattern(predicate)
+        subscribers = self.subscriptions.get_subscriptions_by_pattern(pattern)
         if not subscribers:
             logger.info("Nobody to notify about the message %s", predicate)
         return subscribers

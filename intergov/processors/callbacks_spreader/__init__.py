@@ -1,9 +1,9 @@
 import time
 
+from libtrustbridge.websub.repos import NotificationsRepo, DeliveryOutboxRepo, SubscriptionsRepo
+
 from intergov.conf import env_s3_config, env_queue_config
-from intergov.repos.delivery_outbox import DeliveryOutboxRepo
-from intergov.repos.notifications import NotificationsRepo
-from intergov.repos.subscriptions import SubscriptionsRepo
+
 from intergov.use_cases import (
     DispatchMessageToSubscribersUseCase,
 )

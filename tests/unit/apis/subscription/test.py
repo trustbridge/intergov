@@ -1,12 +1,15 @@
 from http import HTTPStatus as StatusCode
-from unittest import mock
-from tests.unit.domain.wire_protocols.test_generic_message import (
-    _remove_message_params as remove_params
-)
+from unittest import mock, TestCase
+
+import pytest
+
 from intergov.apis.common import errors
 from intergov.apis.common.errors.handlers import error_response_json_template
 from intergov.apis.common.utils import routing
-
+from intergov.apis.subscriptions.constants import (
+    LEASE_SECONDS_MAX_VALUE,
+    LEASE_SECONDS_MIN_VALUE,
+)
 from intergov.apis.subscriptions.subscriptions import (
     UnknownModeError,
     CallbackURLValidationError,
@@ -19,12 +22,9 @@ from intergov.apis.subscriptions.subscriptions import (
     _validate_url,
     _validate_topic
 )
-from intergov.apis.subscriptions.constants import (
-    LEASE_SECONDS_DEFAULT_VALUE,
-    LEASE_SECONDS_MAX_VALUE,
-    LEASE_SECONDS_MIN_VALUE,
+from tests.unit.domain.wire_protocols.test_generic_message import (
+    _remove_message_params as remove_params
 )
-
 
 SUBSCRIPTIONS_REPO_CLASS = 'intergov.apis.subscriptions.subscriptions.SubscriptionsRepo'
 
@@ -111,7 +111,7 @@ def test_error_builders():
             {
                 'key': MODE_ATTR_KEY,
                 'value': INVALID_MODE_DATA[MODE_ATTR_KEY],
-                'expected':[
+                'expected': [
                     MODE_ATTR_SUBSCRIBE_VALUE,
                     MODE_ATTR_UNSUBSCRIBE_VALUE
                 ]
@@ -178,165 +178,137 @@ def test_error_builders():
     }
 
 
-@mock.patch(SUBSCRIPTIONS_REPO_CLASS)
-def test_post_success(RepoMock, client):
-    post = RepoMock.return_value.post
-    delete = RepoMock.return_value.delete
-    post.return_value = True
-    delete.return_value = True
+@pytest.mark.usefixtures("client_class")
+class SubscriptionViewTest(TestCase):
+    def setUp(self):
+        patcher = mock.patch(SUBSCRIPTIONS_REPO_CLASS)
+        self.subscription_repo = patcher.start().return_value
+        self.addCleanup(patcher.stop)
 
-    # dummy register subscription check with default lease seconds
-    resp = client.post(
-        POST_URL,
-        data=VALID_SUBSCRIBE_DATA,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    post.assert_called_once_with(
-        VALID_SUBSCRIBE_DATA[CALLBACK_ATTR_KEY],
-        VALID_SUBSCRIBE_DATA[TOPIC_ATTR_KEY],
-        LEASE_SECONDS_DEFAULT_VALUE
-    )
-    assert resp.status_code == StatusCode.ACCEPTED, resp.data
-
-    # dummy register subscription check with default lease seconds set
-    RepoMock.reset_mock()
-    data = {**VALID_SUBSCRIBE_DATA}
-    data[LEASE_SECONDS_ATTR_KEY] = LEASE_SECONDS_MAX_VALUE
-    resp = client.post(
-        POST_URL,
-        data=data,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    assert resp.status_code == StatusCode.ACCEPTED, resp.data
-    post.assert_called_once_with(
-        data[CALLBACK_ATTR_KEY],
-        data[TOPIC_ATTR_KEY],
-        data[LEASE_SECONDS_ATTR_KEY]
-    )
-
-    # dummy deregister subscription check
-    resp = client.post(
-        POST_URL,
-        data=VALID_UNSUBSCRIBE_DATA,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    delete.assert_called_once()
-    assert resp.status_code == StatusCode.ACCEPTED, resp.get_json()
-
-
-@mock.patch(SUBSCRIPTIONS_REPO_CLASS)
-def test_post_error(RepoMock, client):
-    repo = RepoMock.return_value
-    post = repo.post
-    delete = repo.delete
-    # forcing correct mimetype
-    for content_type in INVALID_CONTENT_TYPES:
-        resp = client.post(
+    def test_register_subscription__with_default_lease_seconds__should_succeed(self):
+        resp = self.client.post(
             POST_URL,
             data=VALID_SUBSCRIBE_DATA,
-            content_type=content_type
+            content_type=VALID_REQUEST_CONTENT_TYPE
         )
-        assert resp.status_code == StatusCode.UNSUPPORTED_MEDIA_TYPE, resp.data
-        assert resp.get_json() == error_response_json_template(
-            routing.UnsupportedMediaTypeError(
-                content_type,
-                [VALID_REQUEST_CONTENT_TYPE],
-                []
-            )
-        )
+        assert resp.status_code == StatusCode.ACCEPTED, resp.data
 
-    # checks missing single required attr
-    for key in REQUIRED_ATTRS:
-        data = remove_params(VALID_SUBSCRIBE_DATA, keys=[key])
-        resp = client.post(
+    def test_register_subscription__with__lease_seconds__should_succeed(self):
+        data = {**VALID_SUBSCRIBE_DATA}
+        data[LEASE_SECONDS_ATTR_KEY] = LEASE_SECONDS_MAX_VALUE
+        resp = self.client.post(
+            POST_URL,
+            data=data,
+            content_type=VALID_REQUEST_CONTENT_TYPE
+        )
+        assert resp.status_code == StatusCode.ACCEPTED, resp.data
+
+    def test_deregister_subscription__when_exist__should_succeed(self):
+        self.subscription_repo.get_subscriptions_by_pattern.return_value = [
+            mock.Mock(callback_url=VALID_SUBSCRIBE_DATA[CALLBACK_ATTR_KEY])
+        ]
+        resp = self.client.post(
+            POST_URL,
+            data=VALID_UNSUBSCRIBE_DATA,
+            content_type=VALID_REQUEST_CONTENT_TYPE
+        )
+        assert resp.status_code == StatusCode.ACCEPTED, resp.get_json()
+        self.subscription_repo.bulk_delete.assert_called_once_with([
+            'SONGS/OLD/TRACK/CREATED/5bb78ecf699270199191582271882041'
+        ])
+
+    def test_request_with_wrong_mime_type__should_return_error(self):
+        # forcing correct mimetype
+        for content_type in INVALID_CONTENT_TYPES:
+            resp = self.client.post(
+                POST_URL,
+                data=VALID_SUBSCRIBE_DATA,
+                content_type=content_type
+            )
+            assert resp.status_code == StatusCode.UNSUPPORTED_MEDIA_TYPE, resp.data
+            assert resp.get_json() == error_response_json_template(
+                routing.UnsupportedMediaTypeError(
+                    content_type,
+                    [VALID_REQUEST_CONTENT_TYPE],
+                    []
+                )
+            )
+
+    def test_request_with_one_missing_required_attribute__should_return_error(self):
+        for key in REQUIRED_ATTRS:
+            data = remove_params(VALID_SUBSCRIBE_DATA, keys=[key])
+            resp = self.client.post(
+                POST_URL,
+                data=data,
+                content_type=VALID_REQUEST_CONTENT_TYPE
+            )
+            assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
+            assert resp.get_json() == error_response_json_template(
+                errors.MissingAttributesError([key])
+            )
+
+    def test_request_with_all_missing_required_attribute__should_return_error(self):
+        data = remove_params(VALID_SUBSCRIBE_DATA, REQUIRED_ATTRS)
+        resp = self.client.post(
             POST_URL,
             data=data,
             content_type=VALID_REQUEST_CONTENT_TYPE
         )
         assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
         assert resp.get_json() == error_response_json_template(
-            errors.MissingAttributesError([key])
+            errors.MissingAttributesError(REQUIRED_ATTRS)
         )
 
-    # checks missing multiply required attrs, must return all missing
-    data = remove_params(VALID_SUBSCRIBE_DATA, REQUIRED_ATTRS)
-    resp = client.post(
-        POST_URL,
-        data=data,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
-    assert resp.get_json() == error_response_json_template(
-        errors.MissingAttributesError(REQUIRED_ATTRS)
-    )
+        resp = self.client.post(
+            POST_URL,
+            data=INVALID_TOPIC_DATA,
+            content_type=VALID_REQUEST_CONTENT_TYPE
+        )
+        assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
+        assert resp.get_json() == error_response_json_template(
+            TopicValidationError('Predicates shorter than 4 elements must include wildcard as the last element')
+        )
 
-    resp = client.post(
-        POST_URL,
-        data=INVALID_TOPIC_DATA,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
-    assert resp.get_json() == error_response_json_template(
-        TopicValidationError('Predicates shorter than 4 elements must include wildcard as the last element')
-    )
+        resp = self.client.post(
+            POST_URL,
+            data=INVALID_CALLBACK_DATA,
+            content_type=VALID_REQUEST_CONTENT_TYPE
+        )
+        assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
+        assert resp.get_json() == error_response_json_template(
+            CallbackURLValidationError('URL must contain scheme')
+        )
 
-    resp = client.post(
-        POST_URL,
-        data=INVALID_CALLBACK_DATA,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
-    assert resp.get_json() == error_response_json_template(
-        CallbackURLValidationError('URL must contain scheme')
-    )
+    def test_request__with_unknown_mode_error__should_return_error(self):
+        resp = self.client.post(
+            POST_URL,
+            data=INVALID_MODE_DATA,
+            content_type=VALID_REQUEST_CONTENT_TYPE
+        )
+        assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
+        assert resp.get_json() == error_response_json_template(
+            UnknownModeError(INVALID_MODE_DATA[MODE_ATTR_KEY])
+        )
 
-    # checks unknown mode error, if mode is not in [subscribe, unsubscribe]
-    resp = client.post(
-        POST_URL,
-        data=INVALID_MODE_DATA,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    assert resp.status_code == StatusCode.BAD_REQUEST, resp.data
-    assert resp.get_json() == error_response_json_template(
-        UnknownModeError(INVALID_MODE_DATA[MODE_ATTR_KEY])
-    )
+    def test_request__when_subscription_exists__should_return_error(self):
+        resp = self.client.post(
+            POST_URL,
+            data=VALID_SUBSCRIBE_DATA,
+            content_type=VALID_REQUEST_CONTENT_TYPE
+        )
+        # let's support both conflict and fine, need to think about it more
+        assert resp.status_code in (StatusCode.CONFLICT, StatusCode.ACCEPTED), resp.data
+        # assert resp.get_json() == error_response_json_template(
+        #     SubscriptionExistsError()
+        # )
 
-    # checks subscription exists error
-    resp = client.post(
-        POST_URL,
-        data=VALID_SUBSCRIBE_DATA,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    # let's support both conflict and fine, need to think about it more
-    assert resp.status_code in (StatusCode.CONFLICT, StatusCode.ACCEPTED), resp.data
-    # assert resp.get_json() == error_response_json_template(
-    #     SubscriptionExistsError()
-    # )
-
-    # checks unable to post error
-    repo.reset_mock()
-    post.return_value = None
-    resp = client.post(
-        POST_URL,
-        data=VALID_SUBSCRIBE_DATA,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    post.assert_called_once()
-    assert resp.status_code == StatusCode.INTERNAL_SERVER_ERROR, resp.data
-    assert resp.get_json() == error_response_json_template(
-        UnableToPostSubscriptionError()
-    )
-
-    # checks subscription not found error
-    repo.reset_mock()
-    delete.return_value = False
-    resp = client.post(
-        POST_URL,
-        data=VALID_UNSUBSCRIBE_DATA,
-        content_type=VALID_REQUEST_CONTENT_TYPE
-    )
-    delete.assert_called_once()
-    assert resp.status_code == StatusCode.NOT_FOUND, resp.data
-    assert resp.get_json() == error_response_json_template(
-        SubscriptionNotFoundError()
-    )
+    def test_request__when_subscription_not_found__should_return_error(self):
+        resp = self.client.post(
+            POST_URL,
+            data=VALID_UNSUBSCRIBE_DATA,
+            content_type=VALID_REQUEST_CONTENT_TYPE
+        )
+        assert resp.status_code == StatusCode.NOT_FOUND, resp.data
+        assert resp.get_json() == error_response_json_template(
+            SubscriptionNotFoundError()
+        )

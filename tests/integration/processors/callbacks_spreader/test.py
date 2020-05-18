@@ -1,8 +1,9 @@
-from intergov.conf import env_s3_config, env_queue_config
-from intergov.repos.delivery_outbox import DeliveryOutboxRepo
-from intergov.repos.notifications import NotificationsRepo
-from intergov.repos.subscriptions import SubscriptionsRepo
-from intergov.processors.callbacks_spreader import CallbacksSpreaderProcessor
+from libtrustbridge.utils.conf import env_queue_config, env_s3_config
+from libtrustbridge.websub import repos
+from libtrustbridge.websub.domain import Pattern
+from libtrustbridge.websub.processors import Processor
+
+from intergov.use_cases import DispatchMessageToSubscribersUseCase
 from tests.unit.domain.wire_protocols.test_generic_message import (
     _generate_msg_object
 )
@@ -37,13 +38,14 @@ SUBSCRIPTIONS_WITH_COMMON_PREFIXES = {
 
 
 def _fill_subscriptions_repo(repo, subscriptions):
-    overal = 0
+    overall = 0
     for predicate, number in subscriptions.items():
-        overal += number
+        overall += number
         url_tail = predicate.replace('.', '-')+"-{}"
         url = CALLBACK_URL.format(url_tail)
         for i in range(number):
-            assert repo.post(url.format(i), predicate, DEFAULT_EXPIRATION)
+            print(f"subcribe predicate:{predicate}, url:{url.format(i)}")
+            repo.subscribe_by_pattern(Pattern(predicate), url.format(i), DEFAULT_EXPIRATION)
     assert not repo._unsafe_is_empty_for_test()
 
 
@@ -52,12 +54,11 @@ def _is_predicate_in_url(url, predicate):
 
 
 def test():
-
     # testing predicate in url search
 
-    delivery_outbox_repo = DeliveryOutboxRepo(DELIVERY_OUTBOX_REPO_CONF)
-    notifications_repo = NotificationsRepo(NOTIFICATIONS_REPO_CONF)
-    subscriptions_repo = SubscriptionsRepo(SUBSCRIPTIONS_REPO_CONF)
+    delivery_outbox_repo = repos.DeliveryOutboxRepo(DELIVERY_OUTBOX_REPO_CONF)
+    notifications_repo = repos.NotificationsRepo(NOTIFICATIONS_REPO_CONF)
+    subscriptions_repo = repos.SubscriptionsRepo(SUBSCRIPTIONS_REPO_CONF)
 
     delivery_outbox_repo._unsafe_clear_for_test()
     notifications_repo._unsafe_clear_for_test()
@@ -67,11 +68,8 @@ def test():
     assert delivery_outbox_repo._unsafe_is_empty_for_test()
     assert subscriptions_repo._unsafe_is_empty_for_test()
 
-    processor = CallbacksSpreaderProcessor(
-        notifications_repo_conf=NOTIFICATIONS_REPO_CONF,
-        delivery_outbox_repo_conf=DELIVERY_OUTBOX_REPO_CONF,
-        subscriptions_repo_conf=SUBSCRIPTIONS_REPO_CONF
-    )
+    use_case = DispatchMessageToSubscribersUseCase(notifications_repo, delivery_outbox_repo, subscriptions_repo)
+    processor = Processor(use_case=use_case)
 
     # testing that iter returns processor
     assert iter(processor) is processor
@@ -83,6 +81,9 @@ def test():
     for prefix, subscriptions in SUBSCRIPTIONS_WITH_COMMON_PREFIXES.items():
         _fill_subscriptions_repo(subscriptions_repo, subscriptions)
 
+    for s in subscriptions_repo.get_subscriptions_by_pattern(Pattern('aaa.bbb.ccc.ddd')):
+        print(s.__hash__())
+        print(s.payload, s.key, s.now, s.data)
     # testing that subscriptions repod doesn't have side effect on processor
     assert next(processor) is None
 
@@ -107,6 +108,8 @@ def test():
             assert _is_predicate_in_url(url, predicate), {'url': url, 'predicate': predicate}
             assert delivery_outbox_repo.delete(message_queue_id)
         # test queue is empty
+
+        print(delivery_outbox_repo.get_job())
         assert not delivery_outbox_repo.get_job()
     # processor completed the job
     assert next(processor) is None
