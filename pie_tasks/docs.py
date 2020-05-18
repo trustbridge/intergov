@@ -18,8 +18,7 @@ def _run_docs_container(c,listen_port=False):
 @task
 def create_docker_image():
     """Create the docker image that can build the docs"""
-    with cd(DOCS_DIR):
-        Docker().build('docker',['--no-cache','-t intergov_docs/build','--rm'])
+    Docker().build('.',['-f docs/docker/Dockerfile','-t intergov_docs/build','--no-cache','--rm'])
 
 
 @task
@@ -33,6 +32,7 @@ def build_docs():
         'docs/_build/html',
     ]
     with cd(DOCS_DIR):
+        _run_docs_container('sphinx-apidoc -o docs/_modules intergov')
         _run_docs_container('python -m sphinx {}'.format(' '.join(sphinx_args)))
 
 
