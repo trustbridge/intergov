@@ -1,0 +1,99 @@
+digraph d {
+node [shape=component style=filled fillcolor=grey];
+
+local_node [label="<<Intergov>>\nNode"];
+uc_node_post_message [label="post\nmessage" shape=ellipse];
+uc_subscribe_to_message_by_id [label="subscribe to\nmessage by id" shape=ellipse];
+uc_subscribe_to_messages_by_jurisdiction [label="subscribe to\nmessage by\njurisdiction" shape=ellipse];
+uc_deliver_subscription_event [label="deliver\nsubscription\nevent" shape=ellipse];
+
+channel_endpoint [label="<<Flask API>>\nChannel Endpoint\nand\nSubscription Hub", fillcolor=green];
+uc_channel_post_message [label="CHAN post\nmessage" shape=ellipse];
+sending_db [label="<<DB>>\nSending DB", fillcolor=lightblue];
+uc_get_new_messages [label="get new\nmessages" shape=ellipse];
+receiving_db [label="<<DB>>\nReceiving DB", fillcolor=lightblue];
+uc_write_subscription [label="write\nsubscription" shape=ellipse];
+
+channel_media [label="<<blockchain>>\nChannel Media", fillcolor=purple];
+
+subscription_processor [label="<<lambda>>\nSubscription\nProcessor", fillcolor=green];
+subscription_store [label="<<s3>>\nSubscription\nStore", fillcolor=lightblue];
+uc_notify_subscribers [label="notify\nsubscribers" shape=ellipse];
+callback_spreader [label="<<lambda>>\nCallback\nSpreader", fillcolor=green];
+uc_get_subscription_event [label="get\nsubscription\nevents" shape=ellipse];
+subscription_event_queue [label="<<sqs>>\nSubscription\nEvent Queue", fillcolor=lightblue];
+
+
+# Grouping for nicer display
+subgraph node_channel_interface{
+    rank="same"
+    channel_endpoint
+    callback_spreader
+}
+
+subgraph node_ucs{
+    rank="same"
+    uc_node_post_message
+    uc_subscribe_to_message_by_id
+    uc_subscribe_to_messages_by_jurisdiction
+    uc_deliver_subscription_event
+}
+
+subgraph channel_components{
+    rank="same"
+    channel_endpoint
+    subscription_processor
+    callback_spreader
+}
+
+subgraph channel_ucs{
+    rank="same"
+    uc_channel_post_message
+    uc_get_new_messages
+    uc_write_subscription
+    uc_get_subscription_event
+}
+
+subgraph channel_stores{
+    rank="same"
+    sending_db
+    receiving_db
+    subscription_store
+    subscription_event_queue
+}
+
+
+# Efferent messages
+# node posts to channel
+local_node -> uc_node_post_message;
+uc_node_post_message -> channel_endpoint;
+uc_channel_post_message -> channel_endpoint [dir=back];
+uc_channel_post_message -> sending_db;
+uc_channel_post_message -> channel_media;
+# node subscribe to updates about that message
+local_node -> uc_subscribe_to_message_by_id;
+uc_subscribe_to_message_by_id -> channel_endpoint;#subscription_hub
+uc_write_subscription -> channel_endpoint [dir=back];
+uc_write_subscription -> subscription_store;
+
+# Afferent messages
+# channel observes new messages
+channel_endpoint -> uc_get_new_messages;
+uc_get_new_messages -> channel_media;
+uc_get_new_messages -> receiving_db;
+# node subscribes to new messages
+local_node -> uc_subscribe_to_messages_by_jurisdiction;
+uc_subscribe_to_messages_by_jurisdiction -> channel_endpoint;#subscription_hub
+
+# Subscriptions
+# subscription processor delivers events
+subscription_processor -> uc_notify_subscribers;
+uc_notify_subscribers -> receiving_db;
+uc_notify_subscribers -> sending_db;
+uc_notify_subscribers -> subscription_event_queue;
+# callback spreader makes callbacks
+callback_spreader -> uc_get_subscription_event;
+uc_get_subscription_event -> subscription_event_queue;
+callback_spreader -> uc_deliver_subscription_event;
+uc_deliver_subscription_event -> local_node;
+}
