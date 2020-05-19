@@ -4,6 +4,11 @@ import sys
 import os
 
 cwd = os.getcwd()  # expected $PROJECT_ROOT/docs/
+# if we are running `make html` from docs/
+# then the project root should be the parent directory
+if os.path.basename(cwd) == 'docs':
+    cwd = os.path.dirname(cwd)
+
 print(cwd)
 project_root = os.path.dirname(cwd)
 print(sys.path)
