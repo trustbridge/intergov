@@ -3,11 +3,10 @@
 import sys
 import os
 
+# assumes this is the root of the project
 cwd = os.getcwd()
 project_root = os.path.dirname(cwd)
-modules = ('intergov',)
-for module in modules:
-   mod = os.path.join(project_root, module)
+sys.path.insert(0, cwd)
 
 import intergov  # noqa
 
