@@ -64,6 +64,7 @@ class HttpApiChannel:
             f"{self.CONFIG['ChannelUrl']}{relative_url}",
             json=payload,
             headers=self._get_headers(),
+            timeout=10,
         )
         if str(resp.status_code).startswith("2"):
             # this ID has any meaning only for channel and notifications from it

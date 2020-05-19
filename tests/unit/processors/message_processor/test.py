@@ -1,3 +1,5 @@
+from os import environ
+
 from unittest import mock
 from intergov.processors.message_processor import InboundMessageProcessor
 
@@ -73,7 +75,7 @@ def test(
         assert kwargs.items() <= conf.items()
 
     ProcessMessageUseCase.assert_called_once_with(
-        country='AU',
+        country=environ["IGL_COUNTRY"],
         bc_inbox_repo=BCInboxRepo.return_value,
         message_lake_repo=MessageLakeRepo.return_value,
         object_acl_repo=ObjectACLRepo.return_value,

@@ -1,0 +1,224 @@
+version: '3.5'
+
+networks:
+  apis_external:
+    driver: bridge
+    name: ${COMPOSE_PROJECT_NAME}-ig-apis-external
+  internal:
+    driver: bridge
+    name: ${COMPOSE_PROJECT_NAME}int
+  intercountries:
+    driver: bridge
+    name: intercountries
+
+x-services:
+  base: &base_service
+    build:
+      context: .
+      dockerfile: ./Dockerfile-demo
+    image: intergov-demo-base
+    depends_on:
+      - postgresql
+      - elasticmq
+      - minio
+    volumes:
+      # having this volume allows us to have updated code inside the docker
+      # container without rebuilding, but saved artefacts from the container
+      # itself to the repo
+      # For production-like use it may be disabled
+      - ./intergov:/src/intergov
+      - ./tests:/src/tests
+      - ./htmlcov:/src/htmlcov
+    command: bash -c "cd /src && echo "Hello I'm a container""
+    networks:
+      - apis_external
+      - internal
+    env_file:
+      - ./demo-default.env
+      - ./demo-${COMPOSE_PROJECT_NAME}.env
+      - ./demo-${COMPOSE_PROJECT_NAME}-local.env
+
+  base_api: &base_api_service
+    <<: *base_service
+    networks:
+      - apis_external
+      - internal
+
+services:
+  # service providers - minio, elasticMQ, postgres
+  postgresql:
+    image: postgres:10.5
+    environment:
+      - POSTGRES_USER=intergovuser
+      - POSTGRES_PASSWORD=intergovpassword
+    networks:
+      - internal
+    volumes:
+      - ./var-${COMPOSE_PROJECT_NAME}/postgres_data:/var/lib/postgresql/data
+    restart: on-failure
+
+  elasticmq:
+    image: softwaremill/elasticmq
+    volumes: ['./tests/local_elasticmq.conf:/opt/elasticmq.conf']
+    logging:
+      # because it's noisy
+      driver: none
+    networks:
+      - internal
+    restart: on-failure
+
+  minio:
+    # https://docs.min.io/docs/minio-docker-quickstart-guide.html
+    image: minio/minio
+    command: server /minio-data
+    environment:
+      - MINIO_ACCESS_KEY=minidemoaccess
+      - MINIO_SECRET_KEY=miniodemosecret
+      - MINIO_HTTP_TRACE=/minio-data/requests.log
+    restart: on-failure
+    volumes:
+      - ./var-${COMPOSE_PROJECT_NAME}/minio-data:/minio-data
+    networks:
+      - internal
+
+  ##
+  ## Our services
+  ##
+
+  # this service just runs unit tests at startup
+  tests-unit:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_tests_unit
+    command: bash -c "cd /src && sleep 10 && make test-unit"
+
+  # uncomment to run it on each start. commented because they are slow
+  # or just do manually:
+  # docker-compose run tests sh -c "cd /src && py.test --integration"
+  tests-integration:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_tests_integration
+    depends_on:
+      - postgresql
+      - elasticmq
+      - minio
+      - test-server-dummy-test-helper
+      - message_rx_api
+      - message_api
+    command: bash -c "cd /src && sleep 10 && make test-integration"
+
+  # used for tests to get responses specific responses.
+  test-server-dummy-test-helper:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_dummy_test_helper_server
+    environment:
+      - PYTHONPATH=/src/:/src/intergov/:/src/tests/helpers/servers/
+    # ports: ['${PORTPREFIX}01:80']
+    command: bash -c "cd /src/tests/helpers/servers &&
+      FLASK_APP=dummy_test_helper
+      flask run --host=0.0.0.0 --port=80"
+
+  message_rx_api:
+    <<: *base_api_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_message_rx_api
+    depends_on:
+      - elasticmq
+      - minio
+    # ports: ['${PORTPREFIX}00:80']
+    command: bash -c "cd /src/intergov &&
+      FLASK_APP=apis.message_rx.app
+      flask run --host=0.0.0.0 --port=80"
+
+  message_api:
+    <<: *base_api_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_message_api
+    depends_on:
+      - elasticmq
+      - minio
+    # ports: ['${PORTPREFIX}01:80']
+    command: bash -c "cd /src/intergov &&
+      FLASK_APP=apis.message.app
+      flask run --host=0.0.0.0 --port=80"
+
+  subscriptions_api:
+    <<: *base_api_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_subscriptions_api
+    # ports: ['${PORTPREFIX}02:80']
+    command: bash -c "cd /src/intergov &&
+      FLASK_APP=apis.subscriptions.app
+      flask run --host=0.0.0.0 --port=80"
+
+  document_api:
+    <<: *base_api_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_document_api
+    # ports: ['${PORTPREFIX}03:80']
+    command: bash -c "cd /src/intergov &&
+      FLASK_APP=apis.document.app
+      flask run --host=0.0.0.0 --port=80"
+    networks:
+      - internal
+      - apis_external
+      - intercountries
+
+  ##
+  ## backroung scripts (processors)
+  ##
+
+  proc_inbound_message:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_proc_inbound_message
+    restart: on-failure
+    command: bash -c "cd /src & sleep 8 &&
+      python intergov/processors/message_processor/__init__.py"
+
+  proc_callbacks_spreader:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_proc_callbacks_spreader
+    restart: on-failure
+    command: bash -c "
+      sleep 9 &&
+      python /src/intergov/processors/callbacks_spreader/__init__.py"
+
+  proc_callback_deliver:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_proc_callback_deliver
+    restart: on-failure
+    command: bash -c "cd /src & sleep 10 &&
+      python intergov/processors/callback_deliver/__init__.py"
+
+  multichannel_router:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_multichannel_router
+    restart: on-failure
+    command: bash -c "cd /src & sleep 5 &&
+      python intergov/processors/multichannel_router/__init__.py"
+
+  rejected_messages_processor:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_rejected_messages_processor
+    restart: on-failure
+    command: bash -c "cd /src & sleep 10 &&
+      python intergov/processors/rejected_status_updater/__init__.py"
+
+  # may not be needed after channels support subscriptions
+  channel_poller:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_channel_poller
+    restart: on-failure
+    command: bash -c "cd /src & sleep 3 &&
+      python intergov/processors/channel_poller/__init__.py"
+
+  message_updater:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_message_updater
+    restart: on-failure
+    command: bash -c "cd /src & sleep 3 &&
+      python intergov/processors/message_updater/__init__.py"
+
+  obj_spider:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_obj_spider
+    command: bash -c "cd /src & sleep 11 &&
+      python intergov/processors/obj_spider/__init__.py"
+    networks:
+      - internal
+      - intercountries
