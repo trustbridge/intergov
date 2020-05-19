@@ -3,8 +3,7 @@
 import sys
 import os
 
-# assumes this is the root of the project
-cwd = os.getcwd()
+cwd = os.getcwd()  # expected $PROJECT_ROOT/docs/
 project_root = os.path.dirname(cwd)
 sys.path.insert(0, cwd)
 
