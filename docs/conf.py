@@ -12,7 +12,7 @@ if os.path.basename(cwd) == 'docs':
 print(cwd)
 project_root = os.path.dirname(cwd)
 print(sys.path)
-sys.path.insert(0, cwd)
+sys.path.insert(0, project_root)
 print(sys.path)
 
 import intergov  # noqa
