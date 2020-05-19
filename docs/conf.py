@@ -4,7 +4,9 @@ import sys
 import os
 
 cwd = os.getcwd()  # expected $PROJECT_ROOT/docs/
+print(cwd)
 project_root = os.path.dirname(cwd)
+print(sys.path)
 sys.path.insert(0, cwd)
 
 import intergov  # noqa
