@@ -44,8 +44,10 @@ class MultichannelWorker(object):
             # these 2 are for routing the messages
             "Jurisdiction": "AU",  # please add more countries if you need to
             "Predicate": "UN.CEFACT.",  # quite wide
-            # everything after this ponit is channel-specific configuration
+            # everything after this point is channel-specific configuration
             "ChannelUrl": env(
+                # for MacOs and Windows it could be http://host.docker.internal:5000/
+                # or for Linux http://172.29.0.1:7500 and so on
                 "IGL_MCHR_SHARED_CHANNEL_URL",
                 default="https://sharedchannel.services.devnet.trustbridge.io/"
             ),
@@ -61,13 +63,14 @@ class MultichannelWorker(object):
             ),
             "ChannelAuth": "Cognito/JWT",
         },
+        # this won't work in general - but is useful to test exceptions raised
         {
-            "Name": "dumb SG channel",
+            "Name": "Local FR channel",
             "Jurisdiction": "FR",
             "Predicate": "UN.CEFACT.",
             "ChannelUrl": env(
                 "IGL_MCHR_SHARED_CHANNEL_URL",
-                default="http://httpbin.org/"
+                default="http://172.30.0.1:7500/"
             ),
             "ChannelAuth": "None",
         },

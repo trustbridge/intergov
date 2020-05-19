@@ -168,7 +168,7 @@ def _oidc_token_url():
     wnurl = env("IGL_OAUTH_WELLKNOWN_URL")
     if not wnurl:
         raise Exception(
-            "HttpApiChannel uses Cognit/JWT auth but you haven't configured "
+            "HttpApiChannel uses Cognito/JWT auth but you haven't configured "
             "env variables correctly, and they are required to issue the token"
         )
     wellknown_content = requests.get(wnurl)
