@@ -45,7 +45,20 @@ x-services:
       - internal
 
 services:
-  # service providers - minio, elasticMQ, postgres
+  ##
+  ## service providers - minio, elasticMQ, postgres
+  ##
+
+  # needed only for easy channels development - because on Linux you can't
+  # access the host container in any other reliable way
+  # And shared channels are usually started on the host for the local/demo
+  docker-host:
+    image: qoomon/docker-host
+    cap_add: [ 'NET_ADMIN', 'NET_RAW' ]
+    restart: on-failure
+    networks:
+      - internal
+
   postgresql:
     image: postgres:10.5
     environment:

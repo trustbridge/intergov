@@ -70,7 +70,7 @@ class MultichannelWorker(object):
             "Predicate": "UN.CEFACT.",
             "ChannelUrl": env(
                 "IGL_MCHR_SHARED_CHANNEL_URL",
-                default="http://172.30.0.1:7500/"
+                default="http://docker-host:7500/"
             ),
             "ChannelAuth": "None",
         },
