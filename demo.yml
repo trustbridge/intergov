@@ -53,6 +53,8 @@ services:
       - POSTGRES_PASSWORD=intergovpassword
     networks:
       - internal
+    logging:
+      driver: none
     volumes:
       - ./var-${COMPOSE_PROJECT_NAME}/postgres_data:/var/lib/postgresql/data
     restart: on-failure
@@ -61,7 +63,6 @@ services:
     image: softwaremill/elasticmq
     volumes: ['./tests/local_elasticmq.conf:/opt/elasticmq.conf']
     logging:
-      # because it's noisy
       driver: none
     networks:
       - internal
@@ -76,6 +77,8 @@ services:
       - MINIO_SECRET_KEY=miniodemosecret
       - MINIO_HTTP_TRACE=/minio-data/requests.log
     restart: on-failure
+    logging:
+      driver: none
     volumes:
       - ./var-${COMPOSE_PROJECT_NAME}/minio-data:/minio-data
     networks:
@@ -112,7 +115,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}_dummy_test_helper_server
     environment:
       - PYTHONPATH=/src/:/src/intergov/:/src/tests/helpers/servers/
-    ports: ['5001:5001']
+    # ports: ['${PORTPREFIX}01:80']
     command: bash -c "cd /src/tests/helpers/servers &&
       FLASK_APP=dummy_test_helper
       flask run --host=0.0.0.0 --port=80"
@@ -189,7 +192,7 @@ services:
     <<: *base_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_multichannel_router
     restart: on-failure
-    command: bash -c "cd /src & sleep 5 &&
+    command: bash -c "cd /src & sleep 10 &&
       python intergov/processors/multichannel_router/__init__.py"
 
   rejected_messages_processor:

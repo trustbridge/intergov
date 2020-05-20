@@ -23,12 +23,12 @@ and China; it could be any other - just copy the docker-compose and env files an
 To start Australian setup:
 
    * touch demo-AU-local.env
-   * PORTPREFIX=50 COMPOSE_PROJECT_NAME=AU docker-compose -f AU.yml up
+   * PORTPREFIX=50 COMPOSE_PROJECT_NAME=AU docker-compose -f demo.yml up
 
 For China:
 
    * touch demo-CN-local.env
-   * PORTPREFIX=50 COMPOSE_PROJECT_NAME=CN docker-compose -f AU.yml up
+   * PORTPREFIX=60 COMPOSE_PROJECT_NAME=CN docker-compose -f demo.yml up
 
 About env files: the setups share demo-default.env and have demo-{country_name}.env importer (commited, contains country-specific values) and demo-{country_name}-local.env (gitignored).
 
