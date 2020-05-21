@@ -11,6 +11,13 @@ networks:
     driver: bridge
     name: intercountries
 
+volumes:
+  # named volumes are needed because permissions don't work on Windows
+  # otherwise, which breaks PostgreSQL. COMPOSE_PROJECT_NAME is automatically
+  # prefixed to the volume name by docker-compose
+  postgresql_data:
+
+
 x-services:
   base: &base_service
     build:
@@ -44,6 +51,7 @@ x-services:
       - apis_external
       - internal
 
+
 services:
   ##
   ## service providers - minio, elasticMQ, postgres
@@ -66,10 +74,8 @@ services:
       - POSTGRES_PASSWORD=intergovpassword
     networks:
       - internal
-    logging:
-      driver: none
     volumes:
-      - ./var-${COMPOSE_PROJECT_NAME}/postgres_data:/var/lib/postgresql/data
+      - postgresql_data:/var/lib/postgresql/data
     restart: on-failure
 
   elasticmq:
