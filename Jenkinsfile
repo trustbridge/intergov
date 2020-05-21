@@ -52,7 +52,8 @@ pipeline {
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
                             sh '''#!/bin/bash
-                                cp demo-local-example.env demo-local.env
+                                export COMPOSE_PROJECT_NAME=au
+                                cp demo-au.env demo-au.env
                                 python3.6 pie.py intergov.build
                                 python3.6 pie.py intergov.start
                                 echo "waiting for startup"
@@ -66,6 +67,7 @@ pipeline {
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/")  {
                             sh '''#!/bin/bash
+                                export COMPOSE_PROJECT_NAME=au
                                 python3.6 pie.py intergov.tests.unit
                             '''
                         }
@@ -84,6 +86,7 @@ pipeline {
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/")  {
                             sh '''#!/bin/bash
+                                export COMPOSE_PROJECT_NAME=au
                                 python3.6 pie.py intergov.tests.integration
                             '''
                         }
@@ -111,6 +114,7 @@ pipeline {
                     dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
                         sh '''#!/bin/bash
                             if [[ -f pie.py ]]; then
+                                export COMPOSE_PROJECT_NAME=au
                                 python3.6 pie.py intergov.destroy
                             fi
                         '''
