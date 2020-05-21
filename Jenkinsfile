@@ -53,7 +53,7 @@ pipeline {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
                             sh '''#!/bin/bash
                                 export COMPOSE_PROJECT_NAME=au
-                                cp demo-au.env demo-au.env
+                                cp demo-au.env demo-au-local.env
                                 python3.6 pie.py intergov.build
                                 python3.6 pie.py intergov.start
                                 echo "waiting for startup"
