@@ -30,9 +30,13 @@ For China:
    * touch demo-cn-local.env
    * PORTPREFIX=60 COMPOSE_PROJECT_NAME=cn docker-compose -f demo.yml up
 
-About env files: the setups share demo-default.env and have demo-{country_name}.env importer (commited, contains country-specific values) and demo-{country_name}-local.env (gitignored).
+About env files: the setups share some of them and have other specific for the country.
 
-Local files could probably contain at least ``IGL_MCHR_SHARED_CHANNEL_URL`` variable - which is either some remote or local endpoint available to the containers (useful channel example - https://github.com/trustbridge/shared-db-channel)
+& demo-default.env is the same for all countries
+* demo-{country_name}.env is importer per country (in the Git)
+* demo-{country_name}-local.env (gitignored, developer-specific and secret values
+
+Regarding channels: by default it's configured to send AU and SG messages to the remote-deployed cloud channel with JWT auth (which won't work until you configure secret auth parameters like IGL_OAUTH_CLIENT_ID, IGL_OAUTH_CLIENT_SECRET and so on) and to send FR messages to the channel working on port 7500 of the host machine. Update IGL_MCHR_ROUTING_TABLE to tune that behaviour. See https://github.com/trustbridge/shared-db-channel to start your local channel on this port.
 
 Setups are linked through the ``intercountries`` network and have hostnames equal to their container names (AU_ig_document_api and CN_ig_document_api). obj_spider has this network and can access document APIs from the both setups for example.
 
