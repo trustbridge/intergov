@@ -64,6 +64,7 @@ class HttpApiChannel:
             f"{self.CONFIG['ChannelUrl']}{relative_url}",
             json=payload,
             headers=self._get_headers(),
+            timeout=10,
         )
         if str(resp.status_code).startswith("2"):
             # this ID has any meaning only for channel and notifications from it
@@ -168,7 +169,7 @@ def _oidc_token_url():
     wnurl = env("IGL_OAUTH_WELLKNOWN_URL")
     if not wnurl:
         raise Exception(
-            "HttpApiChannel uses Cognit/JWT auth but you haven't configured "
+            "HttpApiChannel uses Cognito/JWT auth but you haven't configured "
             "env variables correctly, and they are required to issue the token"
         )
     wellknown_content = requests.get(wnurl)

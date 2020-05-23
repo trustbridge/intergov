@@ -8,7 +8,7 @@ ROOT_DIR = Path('.').absolute()
 INTERGOV_DIR = ROOT_DIR
 
 
-DEMO_DOCKER_COMPOSE = DockerCompose('docker-compose.yml')
+DEMO_DOCKER_COMPOSE = DockerCompose('demo.yml')
 
 
 @task

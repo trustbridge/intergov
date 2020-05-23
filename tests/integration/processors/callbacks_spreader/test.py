@@ -12,7 +12,7 @@ DELIVERY_OUTBOX_REPO_CONF = env_queue_config('TEST_1')
 NOTIFICATIONS_REPO_CONF = env_queue_config('TEST_2')
 SUBSCRIPTIONS_REPO_CONF = env_s3_config('TEST')
 
-CALLBACK_URL = "http://dummy-test-helper-server:5001/response/200/{}"
+CALLBACK_URL = "http://test-server-dummy-test-helper:80/response/200/{}"
 
 DEFAULT_EXPIRATION = 3600 * 2
 

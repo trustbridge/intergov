@@ -11,7 +11,7 @@ local storage - postgres for example (and for the demo)
 import random
 import time
 
-from intergov.conf import env, env_postgres_config, env_queue_config
+from intergov.conf import env_json, env_postgres_config, env_queue_config
 from intergov.channels.http_api_channel import HttpApiChannel
 from intergov.repos.api_outbox import ApiOutboxRepo
 from intergov.repos.api_outbox.postgres_objects import Message as PostgresMessageRepr
@@ -38,46 +38,7 @@ class MultichannelWorker(object):
     Iterate over the RouteToChannelUseCase.
     """
 
-    ROUTING_TABLE = [
-        {
-            "Name": "shared db channel to Australia",  # any text
-            # these 2 are for routing the messages
-            "Jurisdiction": "AU",  # please add more countries if you need to
-            "Predicate": "UN.CEFACT.",  # quite wide
-            # everything after this ponit is channel-specific configuration
-            "ChannelUrl": env(
-                "IGL_MCHR_SHARED_CHANNEL_URL",
-                default="https://sharedchannel.services.devnet.trustbridge.io/"
-            ),
-            "ChannelAuth": "Cognito/JWT",  # a simplifed approach
-        },
-        {
-            "Name": "shared db channel to Singapore",
-            "Jurisdiction": "SG",
-            "Predicate": "UN.CEFACT.",
-            "ChannelUrl": env(
-                "IGL_MCHR_SHARED_CHANNEL_URL",
-                default="https://sharedchannel.services.devnet.trustbridge.io/"
-            ),
-            "ChannelAuth": "Cognito/JWT",
-        },
-        {
-            "Name": "dumb SG channel",
-            "Jurisdiction": "FR",
-            "Predicate": "UN.CEFACT.",
-            "ChannelUrl": env(
-                "IGL_MCHR_SHARED_CHANNEL_URL",
-                default="http://httpbin.org/"
-            ),
-            "ChannelAuth": "None",
-        },
-    ]
-
-    # def _prepare_config(self, config):
-    #     if config:
-    #         self.config = config
-    #     else:
-    #         self.config = copy.deepcopy(DEFAULT_CONFIG)
+    ROUTING_TABLE = env_json("IGL_MCHR_ROUTING_TABLE")
 
     def _prepare_outbox_repo(self, conf):
         outbox_repo_conf = env_postgres_config('PROC_BCH_OUTBOX')

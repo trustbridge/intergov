@@ -6,9 +6,10 @@ __pycache__/
 pie.bat
 
 demo-local.env
-demo-local-cn.env
+*-local.env
 
 /var/
+/var-*/
 .venv/
 
 # for easy local development

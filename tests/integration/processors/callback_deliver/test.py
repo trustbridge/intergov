@@ -9,9 +9,8 @@ from tests.unit.domain.wire_protocols.test_generic_message import (
 
 DELIVERY_OUTBOX_REPO_CONF = env_queue_config('TEST')
 
-POST_SUCCESS_URL = "http://dummy-test-helper-server:5001/response/200/success"
-
-POST_ERROR_URL = "http://dummy-test-helper-server:5001/response/500/internal-error"
+POST_SUCCESS_URL = "http://test-server-dummy-test-helper:80/response/200/success"
+POST_ERROR_URL = "http://test-server-dummy-test-helper:80/response/500/internal-error"
 
 
 def _generate_job(url, payload=None):

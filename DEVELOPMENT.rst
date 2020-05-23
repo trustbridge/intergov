@@ -1,8 +1,6 @@
 Development
 ===========
 
-See DEPLOYMENT.rst for an explanation of how to configure and run this.
-
 Development occurs in GitHub at https://github.com/trustbidge/intergov
 
 Please note:
@@ -18,27 +16,43 @@ TODO: create readthedocs site and point to it.
 Quickstart
 ----------
 
+Intergov is tighly coupled with the countries, so if you want to start it locally
+you will do it for some test countries. We have provided 2 demo setups - for Australia
+and China; it could be any other - just copy the docker-compose and env files and change variables accordingly.
+
+To start Australian setup:
+
+   * touch demo-au-local.env
+   * PORTPREFIX=50 COMPOSE_PROJECT_NAME=au docker-compose -f demo.yml up
+
+For China:
+
+   * touch demo-cn-local.env
+   * PORTPREFIX=60 COMPOSE_PROJECT_NAME=cn docker-compose -f demo.yml up
+
+About env files: the setups share some of them and have other specific for the country.
+
+& demo-default.env is the same for all countries
+* demo-{country_name}.env is importer per country (in the Git)
+* demo-{country_name}-local.env (gitignored, developer-specific and secret values
+
+Regarding channels: by default it's configured to send AU and SG messages to the remote-deployed cloud channel with JWT auth (which won't work until you configure secret auth parameters like IGL_OAUTH_CLIENT_ID, IGL_OAUTH_CLIENT_SECRET and so on) and to send FR messages to the channel working on port 7500 of the host machine. Update IGL_MCHR_ROUTING_TABLE to tune that behaviour. See https://github.com/trustbridge/shared-db-channel to start your local channel on this port.
+
+Setups are linked through the ``intercountries`` network and have hostnames equal to their container names (AU_ig_document_api and CN_ig_document_api). obj_spider has this network and can access document APIs from the both setups for example.
+
+Or use the pie.py helper:
+
+   (this needs to be rewritten as well as the script itself)
+
    touch demo-local.env
    python3.6 pie.py intergov.build
    python3.6 pie.py intergov.start
    python3.6 pie.py intergov.tests.unit
    python3.6 pie.py intergov.tests.integration
 
-or, using docker-compose directly:
-
-   $ touch demo-local.py
-   $ docker-compose up (or add -d to keep it running in the background)
-   $ (after it's started) docker-compose up tests-unit (unit tests)
-   $ (after it's started) docker-compose up tests-integration (integration tests)
-
-   $ (to clean it up) docker-compose down --volumes (note - you have to delete var/ directory as well)
-
-For integration tests going fine you need to have all containers started and running.
+For integration tests to succeed you need to have all containers started and running (run ``up`` without parameters)
 
 Expect the last part (integration tests) to take a minute or two.
-
-You will likely want to edit demo-local.env at some stage soon,
-see demo-local-example.env
 
 You can generate docs too with:
 
@@ -48,8 +62,8 @@ You can generate docs too with:
    python3.6 pie.py docs.build_docs_autobuild
 
 
-Project struture
-----------------
+Project structure
+-----------------
 
 * intergov - the source code
 * intergov/repos - all repos (entities to store data)
