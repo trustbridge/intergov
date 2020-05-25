@@ -139,24 +139,13 @@ services:
       FLASK_APP=dummy_test_helper
       flask run --host=0.0.0.0 --port=80"
 
-  message_rx_api:
-    <<: *base_api_service
-    container_name: ${COMPOSE_PROJECT_NAME}_ig_message_rx_api
-    depends_on:
-      - elasticmq
-      - minio
-    # ports: ['${PORTPREFIX}00:80']
-    command: bash -c "cd /src/intergov &&
-      FLASK_APP=apis.message_rx.app
-      flask run --host=0.0.0.0 --port=80"
-
   message_api:
     <<: *base_api_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_message_api
     depends_on:
       - elasticmq
       - minio
-    # ports: ['${PORTPREFIX}01:80']
+    ports: ['${PORTPREFIX}01:80']
     command: bash -c "cd /src/intergov &&
       FLASK_APP=apis.message.app
       flask run --host=0.0.0.0 --port=80"
@@ -164,7 +153,7 @@ services:
   subscriptions_api:
     <<: *base_api_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_subscriptions_api
-    # ports: ['${PORTPREFIX}02:80']
+    ports: ['${PORTPREFIX}02:80']
     command: bash -c "cd /src/intergov &&
       FLASK_APP=apis.subscriptions.app
       flask run --host=0.0.0.0 --port=80"
@@ -172,7 +161,7 @@ services:
   document_api:
     <<: *base_api_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_document_api
-    # ports: ['${PORTPREFIX}03:80']
+    ports: ['${PORTPREFIX}03:80']
     command: bash -c "cd /src/intergov &&
       FLASK_APP=apis.document.app
       flask run --host=0.0.0.0 --port=80"
@@ -180,6 +169,18 @@ services:
       - internal
       - apis_external
       - intercountries
+
+  message_rx_api:
+    <<: *base_api_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_message_rx_api
+    depends_on:
+      - elasticmq
+      - minio
+    ports: ['${PORTPREFIX}09:80']
+    command: bash -c "cd /src/intergov &&
+      FLASK_APP=apis.message_rx.app
+      flask run --host=0.0.0.0 --port=80"
+
 
   ##
   ## backroung scripts (processors)
