@@ -21,6 +21,7 @@ pipeline {
 
     environment {
         DOCKER_BUILD_DIR = "${env.DOCKER_STAGE_DIR}/${BUILD_TAG}"
+        COMPOSE_PROJECT_NAME = "au"
     }
 
     parameters {
@@ -52,7 +53,6 @@ pipeline {
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
                             sh '''#!/bin/bash
-                                export COMPOSE_PROJECT_NAME=au
                                 cp demo-au.env demo-au-local.env
                                 python3.6 pie.py intergov.build
                                 python3.6 pie.py intergov.start
@@ -67,7 +67,6 @@ pipeline {
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/")  {
                             sh '''#!/bin/bash
-                                export COMPOSE_PROJECT_NAME=au
                                 python3.6 pie.py intergov.tests.unit
                             '''
                         }
@@ -75,18 +74,9 @@ pipeline {
                 }
 
                 stage('Run Testing - Integration') {
-                    when {
-                        anyOf {
-                            changeRequest()
-                            equals expected: true, actual: params.run_integration_tests
-                        }
-                    }
-
-
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/")  {
                             sh '''#!/bin/bash
-                                export COMPOSE_PROJECT_NAME=au
                                 python3.6 pie.py intergov.tests.integration
                             '''
                         }
@@ -114,7 +104,6 @@ pipeline {
                     dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
                         sh '''#!/bin/bash
                             if [[ -f pie.py ]]; then
-                                export COMPOSE_PROJECT_NAME=au
                                 python3.6 pie.py intergov.destroy
                             fi
                         '''
@@ -137,7 +126,7 @@ pipeline {
 
         failure {
             slackSend (
-                message: "Testing Failed - ${JOB_NAME} (<${BUILD_URL}|Open>)\n Intergov Testing Failed \n Branch: ${BRANCH_NAME} \n PR: (<${CHANGE_URL}> | ${CHANGE_ID} - ${CHANGE_TITLE}>",
+                message: "Testing Failed - ${JOB_NAME} (<${BUILD_URL}|Open>)",
                 channel: "#igl-automatic-messages",
                 color: "#B22222"
             )
