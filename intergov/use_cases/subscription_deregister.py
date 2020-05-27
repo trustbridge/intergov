@@ -20,10 +20,9 @@ class SubscriptionDeregisterUseCase:
 
     @statsd_timer("usecase.SubscriptionDeregisterUseCase.execute")
     def execute(self, url, predicate):
-        pattern = Pattern(predicate=predicate)
+        pattern = Pattern(predicate)
         subscriptions = self.subscriptions_repo.get_subscriptions_by_pattern(pattern)
         subscriptions_by_url = [s for s in subscriptions if s.callback_url == url]
         if not subscriptions_by_url:
             raise SubscriptionNotFound()
         self.subscriptions_repo.bulk_delete([pattern.to_key(url)])
-
