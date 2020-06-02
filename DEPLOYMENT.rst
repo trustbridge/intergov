@@ -64,6 +64,6 @@ Configuration
 Is done using env variables.
 Boolean values must be strings and either true or false. JSON values must be rendered objects as a string. Everything else is a string. Lack of value uses default one, which is item-specific, or None if no default is provided.
 
-* IGL_CONTRY_DOCUMENT_REPORTS - string with JSON dict, keys are 2 character countries names, values are repo urs (http://.../..)
+* IGL_COUNTRY_DOCUMENT_REPORTS - string with JSON dict, keys are 2 character countries names, values are repo urs (http://.../..)
 * IGL_DEBUG - enable/disable DEBUG for Flask instances
 * IGL_TESTIG - enable/disable TESTING for Flask instances.

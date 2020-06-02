@@ -10,7 +10,7 @@ class Country:
 
     Usage:
 
-        from intergov.domain.contry import Country
+        from intergov.domain.country import Country
         c = Country("US")
         c.object_api_base_url()
     """
