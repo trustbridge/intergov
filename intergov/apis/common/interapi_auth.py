@@ -101,8 +101,9 @@ class AuthMixin:
         assert token_resp.status_code == 200, token_resp.json()
         json_resp = token_resp.json()
         logger.info(
-            "The new JWT for %s ends in %s",
+            "The new JWT for %s is %s and ends in %s",
             auth_parameters["client_id"],
+            json_resp["access_token"],
             json_resp['expires_in']
         )
         return json_resp["access_token"], json_resp['expires_in']

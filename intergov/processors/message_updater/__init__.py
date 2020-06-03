@@ -57,7 +57,7 @@ class MessageUpdater(AuthMixin, object):
         msg = job['message']
         patch_payload = job['patch']
         retry = job.get('retry', 0)
-        retry_max = job.get('retry_max', 2)
+        retry_max = job.get('retry_max', 5)
         sender = msg[gd.SENDER_KEY]
         sender_ref = msg[gd.SENDER_REF_KEY]
         logger.info(
@@ -88,13 +88,20 @@ class MessageUpdater(AuthMixin, object):
             return True
         if resp.status_code != HTTPStatus.OK:
             retry_number = retry + 1
-            logger.error(
-                "[%s] Can't patch the message: %s; sheduling retry %s of %s",
-                sender_ref, resp.text, retry_number, retry_max,
-            )
-            job['retry'] = retry_number
-            self.message_updates_repo.post_job(job, delay_seconds=30)
-            return True
+            if retry_number <= retry_max:
+                logger.error(
+                    "[%s] Can't patch the message: %s; sheduling retry %s of %s",
+                    sender_ref, resp.text, retry_number, retry_max,
+                )
+                job['retry'] = retry_number
+                self.message_updates_repo.post_job(job, delay_seconds=30)
+                return True
+            else:
+                logger.error(
+                    "[%s] Can't patch the message: %s; dropping - max retries reached",
+                    sender_ref, resp.text
+                )
+                return True
         logger.info('[%s] Message patched successfully.', sender_ref)
         return True
 
