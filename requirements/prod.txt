@@ -19,5 +19,5 @@ requests
 # Metrics collection
 python-statsd==2.1.0
 
-git+https://github.com/trustbridge/libtrustbridge@4c1483e#egg=libtrustbridge
+git+https://github.com/trustbridge/libtrustbridge@e2110ed#egg=libtrustbridge
 
