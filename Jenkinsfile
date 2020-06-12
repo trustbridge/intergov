@@ -17,6 +17,7 @@ pipeline {
         durabilityHint('PERFORMANCE_OPTIMIZED')
         parallelsAlwaysFailFast()
         skipDefaultCheckout()
+        quietPeriod 60
     }
 
     environment {
