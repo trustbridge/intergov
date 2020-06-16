@@ -1,7 +1,7 @@
 import random
 import requests
 
-from libtrustbridge.utils.loggers import logging  # NOQA
+from intergov.loggers import logging
 from libtrustbridge.websub import repos
 
 from intergov.monitoring import statsd_timer

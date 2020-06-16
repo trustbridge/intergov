@@ -1,6 +1,6 @@
 import time
 
-from libtrustbridge.utils.loggers import logging
+from intergov.loggers import logging
 from libtrustbridge.utils.conf import env_queue_config
 from libtrustbridge.websub.processors import Processor
 from libtrustbridge.websub.repos import DeliveryOutboxRepo

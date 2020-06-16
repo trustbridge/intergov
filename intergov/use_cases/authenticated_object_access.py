@@ -1,4 +1,4 @@
-import logging
+from intergov.loggers import logging
 
 from intergov.monitoring import statsd_timer
 
