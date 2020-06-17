@@ -112,6 +112,8 @@ services:
     <<: *base_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_tests_unit
     command: bash -c "cd /src && sleep 10 && make test-unit"
+    environment:
+      - SENTRY_DSN=
 
   # uncomment to run it on each start. commented because they are slow
   # or just do manually:
@@ -127,6 +129,8 @@ services:
       - message_rx_api
       - message_api
     command: bash -c "cd /src && sleep 10 && make test-integration"
+    environment:
+      - SENTRY_DSN=
 
   # used for tests to get responses specific responses.
   test-server-dummy-test-helper:
@@ -134,6 +138,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}_dummy_test_helper_server
     environment:
       - PYTHONPATH=/src/:/src/intergov/:/src/tests/helpers/servers/
+      - SENTRY_DSN=
     # ports: ['${PORTPREFIX}01:80']
     command: bash -c "cd /src/tests/helpers/servers &&
       FLASK_APP=dummy_test_helper
