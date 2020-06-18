@@ -168,7 +168,7 @@ class MultichannelWorker(object):
                 result = self.uc.execute(gd_msg)
             except Exception as e:
                 # sleep some seconds after fails
-                logger.info(
+                logger.error(
                     "[%s] Rejecting due to use-case exception %s",
                     gd_msg.sender_ref,
                     str(e)
@@ -197,7 +197,7 @@ class MultichannelWorker(object):
                     result = True
             else:
                 # no channel accepted the message or there was other error
-                logger.info("[%s] Message has NOT been sent", gd_msg.sender_ref)
+                logger.warning("[%s] Message has NOT been sent", gd_msg.sender_ref)
                 self._update_message_status(gd_msg, "rejected")
                 self.outbox_repo.patch(pg_msg.id, {'status': 'rejected'})
                 result = False

@@ -1,7 +1,6 @@
-import logging
-
 from intergov.apis.subscriptions.conf import Config
 from intergov.apis.subscriptions.app import create_app
+from intergov.loggers import logging
 
 logger = logging.getLogger(__name__)
 
