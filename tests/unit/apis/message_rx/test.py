@@ -2,6 +2,8 @@ import uuid
 from http import HTTPStatus
 from unittest import mock
 
+import pytest
+
 from intergov.domain.wire_protocols.generic_discrete import Message
 from intergov.apis.common.errors.handlers import (
     error_response_json_template
@@ -38,6 +40,7 @@ VALID_RESPONSE_MIMETYPE = VALID_REQUEST_MIMETYPE
 INVALID_REQUEST_MIMETYPE = 'application/x-www-form-urlencoded'
 
 
+@pytest.mark.skip()
 @mock.patch(BC_INBOX_REPO_CLASS)
 @mock.patch(ENQUEUE_MESSAGE_USE_CASE_CLASS)  # noqa
 def test_post_success(EnqueueMessageUseCaseMock, BCInboxRepoMock, client):
@@ -145,6 +148,7 @@ def _test_post_message_validation_failed(
         )
 
 
+@pytest.mark.skip()
 def test_post_error(client):
     _test_post_message_received_unsupported_mimetype(client)
 

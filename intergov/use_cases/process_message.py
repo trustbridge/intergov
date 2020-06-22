@@ -17,6 +17,7 @@ class ProcessMessageUseCase:
 
     Gets one message from the channel inbox
     and does number of things with it.
+    The message could be either incoming (received) or outbound (sent)
 
     * dispatch document retreval job
       (if the message is from a foreign source)

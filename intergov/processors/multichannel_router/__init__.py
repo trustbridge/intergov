@@ -3,10 +3,7 @@
 * Mark them as 'sending' in the local storage
 * Pick a channel
 * Send them to the channel
-* Change their status in the message_rx_api to "accepted" (?)
-* Marks them as 'accepted' in the local storage
-
-local storage - postgres for example (and for the demo)
+* Mark them as 'accepted' locally
 """
 import random
 import time
@@ -21,16 +18,6 @@ from intergov.domain.wire_protocols import generic_discrete as gd
 from intergov.use_cases.route_to_channel import RouteToChannelUseCase
 
 logger = logging.getLogger('multichannel_router')
-
-# Commented out because we decided not to use memory channel for some time
-# # this is a kludge
-# # we need some kind of configured registry
-# DEFAULT_CONFIG = [
-#     {
-#         'id': 'DiscreteGenericMemoryChannel',
-#         'type': DiscreteGenericMemoryChannel,
-#     }
-# ]
 
 
 class MultichannelWorker(object):
