@@ -29,8 +29,10 @@ class HttpApiChannel:
 
     def __init__(self, config):
         self.CONFIG = config.copy()
-        assert self.CONFIG.get("ChannelUrl"), "Lack of required parameter in the config"
-        assert self.CONFIG.get("ChannelAuth"), "Lack of required parameter in the config"
+        if not self.CONFIG.get("ChannelUrl"):
+            raise Exception("Lack of required parameter in the config")
+        if not self.CONFIG.get("ChannelAuth"):
+            raise Exception("Lack of required parameter in the config")
         if self.CONFIG['ChannelUrl'].endswith("/"):
             self.CONFIG['ChannelUrl'] = self.CONFIG['ChannelUrl'][:-1]
 
@@ -128,15 +130,29 @@ class HttpApiChannel:
 
     def _issue_cognito_jwt(self):
         # see _get_cached_cognito_jwt descr about the design concerns
-        OAUTH_CLIENT_ID = env("IGL_OAUTH_CLIENT_ID", default=None)
-        OAUTH_CLIENT_SECRET = env("IGL_OAUTH_CLIENT_SECRET", default=None)
-        OAUTH_SCOPES = env("IGL_OAUTH_SCOPES", default=None)
+        new_style_details = self.CONFIG.get("ChannelAuthDetails")
+        if new_style_details:
+            OAUTH_CLIENT_ID = new_style_details["client_id"]
+            OAUTH_CLIENT_SECRET = new_style_details["client_secret"]
+            OAUTH_SCOPES = new_style_details["scope"]
+            TOKEN_URL = new_style_details["token_endpoint"]
+        else:
+            OAUTH_CLIENT_ID = env("IGL_OAUTH_CLIENT_ID", default=None)
+            OAUTH_CLIENT_SECRET = env("IGL_OAUTH_CLIENT_SECRET", default=None)
+            OAUTH_SCOPES = env("IGL_OAUTH_SCOPES", default=None)
+            TOKEN_URL = _oidc_token_url()
+
+        if not OAUTH_CLIENT_ID or not OAUTH_CLIENT_SECRET:
+            raise Exception(
+                "Improperly configured: useing Congito/JWT auth "
+                "without any way to retrieve the token"
+            )
 
         cognito_auth = base64.b64encode(
             f"{OAUTH_CLIENT_ID}:{OAUTH_CLIENT_SECRET}".encode("utf-8")
         ).decode("utf-8")
         token_resp = requests.post(
-            _oidc_token_url(),
+            TOKEN_URL,
             data={
                 "grant_type": "client_credentials",
                 "client_id": OAUTH_CLIENT_ID,
@@ -148,10 +164,18 @@ class HttpApiChannel:
         )
         assert token_resp.status_code == 200, token_resp.json()
         json_resp = token_resp.json()
-        logger.info("Retrieved new JWT; ends in %s", json_resp['expires_in'])
+        logger.info(
+            "Retrieved new JWT for %s; ends in %s",
+            self.CONFIG["Name"],
+            json_resp['expires_in']
+        )
         return json_resp["access_token"], json_resp['expires_in']
 
     def _subscribe_to_message(self, ch_msg_id):
+        # it's a question who will receive these updates
+        # ideally it should be constantly working API, and the separate one,
+        # but message_rx_api could be a fine candidate given it talks to the channel
+        # anyway. And what about secret keys there?
         logger.warning(
             "Although we have to subscribe to channel %s message %s updates,"
             " it's not implemented yet",
