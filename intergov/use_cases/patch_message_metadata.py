@@ -74,37 +74,26 @@ class PatchMessageMetadataUseCase:
         )
         # send status change notification if status updated
         if metadata_delta.get(gd.STATUS_KEY):
-            # for customers subscribed on the topic `message.status.change`
-            # (which is too wide)
-            self.notification_repo.post_job(
-                {
-                    # required
-                    gd.PREDICATE_KEY: 'message.status.change',
-                    # identifier
-                    gd.SUBJECT_KEY: str(message.subject),
-                    # business payload
-                    gd.STATUS_KEY: str(new_status),
-                }
-            )
             # for customers subscribed on the specific message topics
             # These are light, so containing no useful message information
             # apart of the identifier
-
             # because subject can contain dots we just remove them
             # (which is fine while subscribers also remove them when subscribing)
             # Also for subject it's logical to subscribe to ".created" instead of ".status"
             # but ".status" also works (if subscribers are aware)
-            self.notification_repo.post_job(
-                {
-                    gd.PREDICATE_KEY: f'message.{str(message.subject).replace(".", "")}.status',
-                    gd.SUBJECT_KEY: str(message.subject),
-                }
-            )
+            # self.notification_repo.post_job(
+            #     {
+            #         gd.SENDER_REF_KEY: str(message.sender_ref),
+            #         gd.PREDICATE_KEY: f'message.{str(message.subject).replace(".", "")}.status',
+            #         # gd.SUBJECT_KEY: str(message.subject),
+            #     }
+            # )
             # a normal status change
             self.notification_repo.post_job(
                 {
                     gd.PREDICATE_KEY: f'message.{message.sender_ref}.status',
-                    gd.SUBJECT_KEY: str(message.subject),
+                    gd.SENDER_REF_KEY: f"{message.sender}:{message.sender_ref}"
+                    # gd.SUBJECT_KEY: str(message.subject),
                 }
             )
         # return updated version of the message
