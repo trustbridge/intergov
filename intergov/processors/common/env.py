@@ -1,4 +1,4 @@
-from intergov.conf import env, env_json
+from libtrustbridge.utils.conf import env, env_json
 
 MESSAGE_PATCH_API_ENDPOINT = env(
     'IGL_PROC_BCH_MESSAGE_API_ENDPOINT',
@@ -21,7 +21,15 @@ if MESSAGE_PATCH_API_ENDPOINT_AUTH == "Cognito/JWT":
     }
 
 
-MESSAGE_RX_API_ENDPOINT = env(
+
+MESSAGE_RX_API_URL = env(
     'IGL_PROC_BCH_MESSAGE_RX_API_URL',
-    default='http://message_rx_api/messages'
+    default='http://message_rx_api'
 )
+
+COUNTRY = env("IGL_COUNTRY", 'AU')
+
+
+# url to channel endpoint for subscription by jurisdiction
+# i.e https://shared-db-channel-api:8001/messages/subscriptions/by_jurisdiction
+CHANNEL_SUBSCRIBE_URL = env("IGL_PROC_SUBSCRIBE_URL")

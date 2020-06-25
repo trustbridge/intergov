@@ -10,3 +10,4 @@ pytest-flask==0.15.1
 pyyaml==4.2b4
 psycopg2-binary==2.8.3
 sqlalchemy_utils
+responses==0.10.15
