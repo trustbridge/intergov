@@ -2,7 +2,7 @@ import pytest
 from unittest import mock
 
 from intergov.domain.wire_protocols import generic_discrete as protocol
-from intergov.domain.country import Country
+# from intergov.domain.country import Country
 from intergov.use_cases import ProcessMessageUseCase
 from tests.unit.domain.wire_protocols import test_generic_message as test_protocol
 
@@ -44,6 +44,8 @@ def test_empty_inbox(valid_message_dicts):
 def test_non_empty_inbox(valid_message_dicts):
     message_dict = valid_message_dicts[0]
     message_dict['status'] = 'received'
+    message_dict['receiver'] = 'CN'
+    message_dict['sender'] = 'AU'
     m = protocol.Message.from_dict(message_dict)
     bc_inbox = mock.Mock()
     bc_inbox.get.return_value = (432, m)
@@ -87,8 +89,9 @@ def test_repo_exceptions(valid_message_dicts):
     notifications = mock.Mock()
     blockchain_outbox = mock.Mock()
 
+    # sent scenario
     use_case = ProcessMessageUseCase(
-        'CN',
+        'AU',
         bc_inbox,
         message_lake,
         object_acl,
@@ -96,13 +99,33 @@ def test_repo_exceptions(valid_message_dicts):
         notifications,
         blockchain_outbox
     )
+    m.sender = 'AU'
+    m.receiver = 'CN'
+    m.status = 'pending'
+    blockchain_outbox.post.reset_mock()
+    blockchain_outbox.post.side_effect = Exception()
+    assert not use_case.execute()
+    blockchain_outbox.post.assert_called()
+    blockchain_outbox.post.side_effect = None
+
+    # received scenario
+    use_case = ProcessMessageUseCase(
+        'AU',
+        bc_inbox,
+        message_lake,
+        object_acl,
+        object_retreival,
+        notifications,
+        blockchain_outbox
+    )
+    m.sender = 'CN'
+    m.receiver = 'AU'
 
     for repo_method, message_status in {
         message_lake.post: 'received',
         object_acl.post: 'received',
         notifications.post: 'received',
-        blockchain_outbox.post: 'pending',
-        object_retreival.post_job: 'received'
+        object_retreival.post_job: 'received',
     }.items():
         m.status = message_status
         repo_method.reset_mock()
@@ -110,7 +133,3 @@ def test_repo_exceptions(valid_message_dicts):
         assert not use_case.execute()
         repo_method.assert_called()
         repo_method.side_effect = None
-
-    # test loopback, it's ok, we just don't post it to object_retreval_repo
-    m.sender = 'CN'
-    assert use_case.execute()

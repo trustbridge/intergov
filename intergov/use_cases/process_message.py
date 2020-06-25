@@ -1,5 +1,6 @@
 import os
 
+from intergov.conf import env
 from intergov.domain.wire_protocols.generic_discrete import Message
 from intergov.loggers import logging  # NOQA
 from intergov.monitoring import statsd_timer
@@ -81,67 +82,70 @@ class ProcessMessageUseCase:
             logger.exception(e)
             acl_OK = False
 
-        if ENV_SEND_LOOPBACK_MESSAGES:
-            # disabled because it's pointless to see our own messages on this stage
-            # we might end with sending custom notifications but now there are no
-            # consumers for them.
-            # publish outbox is for notifications to internal clients
-            # and in fact it's worthy only for received messages, not for sent
-            # so ideally we shouldn't notify ourselves about our messages
-            # or may be we do if local apps want to know about it?...
-            try:
-                # we delay it a little to make sure the message has got to the repo
-                # and remove status because notifications don't need it
-                message_without_status = Message.from_dict(
-                    message.to_dict(exclude=['status'])
-                )
-                pub_OK = self.notifications_repo.post(
-                    message_without_status,
-                    delay_seconds=3
-                )
-            except Exception as e:
-                logger.exception(e)
-                pub_OK = False
-        else:
-            pub_OK = True
+        try:
+            # we delay it a little to make sure the message has got to the repo
+            # and remove status because notifications don't need it
+            message_without_status = Message.from_dict(
+                message.to_dict(exclude=['status'])
+            )
+            # fat ping for ones who understand
+            pub_OK = self.notifications_repo.post(
+                message_without_status,
+                delay_seconds=3
+            )
+            # light ping for ones who want everything
+            self.notifications_repo.post_job(
+                {
+                    "predicate": f'message.{message.sender_ref}.received',
+                    "sender_ref": f"{message.sender}:{message.sender_ref}"
+                }
+            )
+        except Exception as e:
+            logger.exception(e)
+            pub_OK = False
 
         # blockchain part - pass the message to the blockchain worker
         # so it can be shared to the foreign parties
-        if message.status == 'pending':
-            # not received from the foreign party = must be sent
+        outbox_OK = True
+        ret_OK = True
+        if str(message.sender) == str(self.country) and message.status == 'pending':
+            # our jurisdiction -> remote
             logger.info("Sending message to the channels: %s", message.subject)
             try:
                 outbox_OK = self.blockchain_outbox_repo.post(message)
             except Exception as e:
                 logger.exception(e)
                 outbox_OK = False
-        else:
-            outbox_OK = True
-
-        ret_OK = True
-        if message.status == 'received':
+        elif str(message.sender) != str(self.country) and message.status == 'received':
+            # Incoming message from remote juridsiction
             # might need to download remote documents using the
             # Documents Spider
-            logger.info("Received message from the channels: %s", message.subject)
-            if message.sender != self.country:
-                # if it's not loopback message (test installations only)
-                logger.info(
-                    "Scheduling download remote documents for: %s", message.subject
-                )
-                try:
-                    ret_OK = self.object_retreval_repo.post_job({
-                        "action": "download-object",
-                        "sender": message.sender,
-                        "object": message.obj
-                    })
-                except Exception as e:
-                    logger.exception(e)
-                    ret_OK = False
-            else:
-                logger.info(
-                    "Seems that this message is loopback (sent by us back to us): %s",
-                    message.subject
-                )
+            logger.info(
+                "Received message from remote jurisdiction %s with subject %s",
+                message.sender,
+                message.subject
+            )
+            logger.info(
+                "Scheduling download remote documents for: %s", message.subject
+            )
+            try:
+                ret_OK = self.object_retreval_repo.post_job({
+                    "action": "download-object",
+                    "sender": message.sender,
+                    "object": message.obj
+                })
+            except Exception as e:
+                logger.exception(e)
+                ret_OK = False
+        else:
+            # strange situation
+            logger.warning(
+                "Message sender is %s and we are %s and the status is %s - strange",
+                message.sender,
+                self.country,
+                message.status
+            )
+            return False
 
         if ml_OK and acl_OK and ret_OK and pub_OK and outbox_OK:
             self.bc_inbox_repo.delete(queue_message_id)

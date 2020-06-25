@@ -4,6 +4,7 @@ from http import HTTPStatus
 
 from flask import Blueprint, Response, request
 
+from intergov.conf import env
 from intergov.repos.message_lake import MessageLakeRepo
 from intergov.repos.bc_inbox.elasticmq.elasticmqrepo import BCInboxRepo
 from intergov.repos.notifications import NotificationsRepo
@@ -41,6 +42,7 @@ from .exceptions import (
 
 blueprint = Blueprint('messages', __name__)
 logger = logging.getLogger(__name__)
+IGL_COUNTRY = env('IGL_COUNTRY', default=None)
 
 
 @statsd_timer("api.message.endpoint.message_retrieve")
@@ -144,8 +146,11 @@ def message_post():
     if not message.sender_ref:
         message.kwargs["sender_ref"] = str(uuid.uuid4())
 
-    # because we are first who sees that message
-    message.kwargs["status"] = "pending"
+    if str(IGL_COUNTRY) == str(message.sender):
+        # because we are first who see that message
+        message.kwargs["status"] = "pending"
+    else:
+        message.kwargs["status"] = "received"
 
     repo = BCInboxRepo(
         Config.BC_INBOX_CONF

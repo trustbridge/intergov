@@ -25,6 +25,8 @@ def env(name, default=None):
         value = string_or_b64kms(os.environ[name])
     else:
         value = default
+    if value and isinstance(value, str) and value.startswith('"') and value.endswith('"'):
+        logging.warning("Variable %s has bounding quotes, which is VERY suspicious", name)
     return value
 
 
