@@ -9,8 +9,8 @@ from intergov.loggers import logging
 from intergov.processors.common.env import (
     MESSAGE_PATCH_API_ENDPOINT,
     MESSAGE_PATCH_API_ENDPOINT_AUTH,
-    MESSAGE_PATCH_API_ENDPOINT_AUTH_PARAMS,
 )
+from intergov.processors.common.utils import get_message_patch_api_endpoint_auth_params
 
 logger = logging.getLogger('message_updater')
 
@@ -43,7 +43,7 @@ class MessageUpdater(AuthMixin, object):
         if MESSAGE_PATCH_API_ENDPOINT_AUTH == "none":
             auth_parameters = None
         elif MESSAGE_PATCH_API_ENDPOINT_AUTH == "Cognito/JWT":
-            auth_parameters = MESSAGE_PATCH_API_ENDPOINT_AUTH_PARAMS
+            auth_parameters = get_message_patch_api_endpoint_auth_params()
         else:
             raise Exception(f"Unsupported endpoint auth {MESSAGE_PATCH_API_ENDPOINT_AUTH}")
         result.update(self._get_auth_headers(
