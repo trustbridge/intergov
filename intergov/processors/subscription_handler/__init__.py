@@ -1,7 +1,7 @@
-from intergov.loggers import logging
 from datetime import datetime, timedelta
 from time import sleep
 
+from intergov.loggers import logging
 from intergov.processors.common import env
 from intergov.processors.common.utils import get_channels_for_local_jurisdiction
 from intergov.use_cases import SubscribeByJurisdictionUseCase
@@ -18,17 +18,18 @@ class SubscriptionHandler:
     def run(self):
         for channel in get_channels_for_local_jurisdiction(env.ROUTING_TABLE, env.COUNTRY):
             if self.should_update_subscription():
-                self.subscribe(channel['ChannelUrl'])
+                self.subscribe(channel)
 
     def should_update_subscription(self):
         now = datetime.utcnow()
 
         return not (self.last_subscribed_at and now - self.last_subscribed_at < self.subscription_period)
 
-    def subscribe(self, channel_url):
+    def subscribe(self, channel):
+        channel_url = channel['ChannelUrl']
         now = datetime.utcnow()
         try:
-            callback_url = '%s/channel-message' % env.MESSAGE_RX_API_URL
+            callback_url = self.get_callback_url(channel)
             logger.info('Sending subscription request to %s', channel_url)
             SubscribeByJurisdictionUseCase(channel_url, callback_url, env.COUNTRY).subscribe()
         except (SubscriptionFailure, InvalidSubscriptionParameters) as e:
@@ -36,6 +37,10 @@ class SubscriptionHandler:
         else:
             self.last_subscribed_at = now
             logger.info('Successfully subscribed at %s' % self.last_subscribed_at)
+
+    @staticmethod
+    def get_callback_url(channel):
+        return '{base_url}/channel-message/{Id}'.format(base_url=env.MESSAGE_RX_API_URL, **channel)
 
 
 if __name__ == '__main__':

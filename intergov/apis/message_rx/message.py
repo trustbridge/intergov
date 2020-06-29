@@ -89,9 +89,9 @@ def channel_message_confirm():
 
 
 @statsd_timer("api.message_rx.endpoint.channel_message_receive")
-@blueprint.route('/channel-message', methods=['POST'])
+@blueprint.route('/channel-message/<channel_id>', methods=['POST'])
 @routing.mimetype(['application/json'])
-def channel_message_receive():
+def channel_message_receive(channel_id):
     """
     Handles the pings
     """
@@ -100,8 +100,7 @@ def channel_message_receive():
     # TODO: retrieve that message from the channel worker
     # (using JWT auth we have)
     logger.warning(
-        "Got notification about channel message %s but don't processing it yet"
-        " (don't even know the channel)",
-        new_ch_message_id
+        "Got notification about channel message %s but don't processing it yet, channel_id: %s",
+        new_ch_message_id, channel_id
     )
     return Response()

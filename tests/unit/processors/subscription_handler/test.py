@@ -1,4 +1,5 @@
 from unittest import mock
+from urllib.parse import urlencode
 
 import pytest
 import responses
@@ -18,16 +19,19 @@ class TestSubscriptionHandler:
             self.channel_subscribe_url = "https://sharedchannel.services.devnet.trustbridge.io/"
             self.env.ROUTING_TABLE = [
                 {
+                    "Id": "1",
                     "Jurisdiction": "AU",
                     "ChannelUrl": self.channel_subscribe_url,
                     "ChannelAuth": "Cognito/JWT"
                 },
                 {
+                    "Id": "2",
                     "Jurisdiction": "SG",
                     "ChannelUrl": self.channel_subscribe_url,
                     "ChannelAuth": "Cognito/JWT"
                 },
                 {
+                    "Id": "3",
                     "Jurisdiction": "FR",
                     "ChannelUrl": "http://docker-host:7500/",
                     "ChannelAuth": "None"
@@ -46,10 +50,13 @@ class TestSubscriptionHandler:
         handler.run()
         assert handler.should_update_subscription() is False
 
-        expected_body = ('hub.mode=subscribe&'
-                         'hub.callback=http%3A%2F%2Fmock_message_rx_api%2Fchannel-message&'
-                         'hub.topic=AU&'
-                         'hub.secret=')
+        expected_body = urlencode(
+            {
+                'hub.mode': 'subscribe',
+                'hub.callback': 'http://mock_message_rx_api/channel-message/1',
+                'hub.topic': 'AU',
+                'hub.secret': '',
+            })
         assert self.mocked_responses.calls[0].request.body == expected_body
 
     def test_should_update_subscription__in_1_day_after_successful_subscription__should_return_true(self):
