@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+import datetime
 from time import sleep
 
 from intergov.loggers import logging
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class SubscriptionHandler:
     def __init__(self):
         self.last_subscribed_at = None
-        self.subscription_period = timedelta(days=1)
+        self.subscription_period = datetime.timedelta(days=1)
 
     def run(self):
         for channel in get_channels_for_local_jurisdiction(env.ROUTING_TABLE, env.COUNTRY):
@@ -21,13 +21,13 @@ class SubscriptionHandler:
                 self.subscribe(channel)
 
     def should_update_subscription(self):
-        now = datetime.utcnow()
+        now = datetime.datetime.utcnow()
 
         return not (self.last_subscribed_at and now - self.last_subscribed_at < self.subscription_period)
 
     def subscribe(self, channel):
         channel_url = channel['ChannelUrl']
-        now = datetime.utcnow()
+        now = datetime.datetime.utcnow()
         try:
             callback_url = self.get_callback_url(channel)
             logger.info('Sending subscription request to %s', channel_url)

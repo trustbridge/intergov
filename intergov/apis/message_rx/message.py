@@ -100,7 +100,7 @@ def channel_message_receive(channel_id):
     # TODO: retrieve that message from the channel worker
     # (using JWT auth we have)
     logger.warning(
-        "Got notification about channel message %s but don't processing it yet, channel_id: %s",
+        "Got notification about channel message %s but not processing it yet, channel_id: %s",
         new_ch_message_id, channel_id
     )
     return Response()
