@@ -1,7 +1,6 @@
-# import os
-# import tempfile
-# import yaml
+
 import pytest
+import responses
 
 
 @pytest.fixture(scope='session')
@@ -37,3 +36,11 @@ def docker_setup():
 def pytest_addoption(parser):
     parser.addoption("--integration", action="store_true",
                      help="run integration tests")
+
+
+@pytest.fixture
+def mocked_responses(request):
+    with responses.RequestsMock() as rsps:
+        if request.cls is not None:
+            request.cls.mocked_responses = rsps
+        yield rsps

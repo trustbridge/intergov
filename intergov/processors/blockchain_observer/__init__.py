@@ -17,7 +17,7 @@ from intergov.domain.wire_protocols import generic_discrete as gd
 from intergov.conf import env
 from intergov.loggers import logging
 from intergov.processors.common.env import (
-    MESSAGE_RX_API_ENDPOINT,
+    MESSAGE_RX_API_URL,
 )
 
 logger = logging.getLogger('bch_observer')
@@ -141,7 +141,7 @@ class BlockchainObserverWorker(object):
             except zmq.Again:
                 pass
         else:
-            raise RuntimeError("Unable to receive subsription response. Time Out.")
+            raise RuntimeError("Unable to receive subscription response. Time Out.")
 
     def _generate_message_dict_from_state_change(self, state_change):
         values = state_change.value.decode().split(",")
@@ -159,7 +159,7 @@ class BlockchainObserverWorker(object):
     def _post_message_to_message_rx(self, payload):
         logger.info(f'Posting message to message_rx_api:{payload}')
         resp = requests.post(
-            MESSAGE_RX_API_ENDPOINT,
+            '%s/messages' % MESSAGE_RX_API_URL,
             json=payload
         )
         if resp.status_code != HTTPStatus.CREATED:
