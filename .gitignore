@@ -3,15 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+.venv/
+
 pie.bat
 
-demo-local.env
-*-local.env
+/docker/*-local.env
 
-/var/
-/var-*/
-.venv/
+/docker/volumes/
 
 # for easy local development
 intergov/libtrustbridge/
-
