@@ -22,16 +22,6 @@ from intergov.use_cases.route_to_channel import RouteToChannelUseCase
 
 logger = logging.getLogger('multichannel_router')
 
-# Commented out because we decided not to use memory channel for some time
-# # this is a kludge
-# # we need some kind of configured registry
-# DEFAULT_CONFIG = [
-#     {
-#         'id': 'DiscreteGenericMemoryChannel',
-#         'type': DiscreteGenericMemoryChannel,
-#     }
-# ]
-
 
 class MultichannelWorker(object):
     """
@@ -56,12 +46,6 @@ class MultichannelWorker(object):
             repo_conf.update(conf)
         self.message_updates_repo = MessageUpdatesRepo(repo_conf)
 
-    # def _prepare_channel_pending_message_repo(self, conf):
-    #     channel_pending_message_repo_conf = env_queue_config('PROC_BCH_CHANNEL_PENDING_MESSAGE')
-    #     if conf:
-    #         channel_pending_message_repo_conf.update(conf)
-    #     self.channel_pending_message_repo = ChannelPendingMessageRepo(channel_pending_message_repo_conf)
-
     def _prepare_use_cases(self):
         self.uc = RouteToChannelUseCase(self.ROUTING_TABLE)
 
@@ -74,27 +58,6 @@ class MultichannelWorker(object):
         for routing_rule in self.ROUTING_TABLE:
             routing_rule["ChannelInstance"] = HttpApiChannel(routing_rule.copy())
         return
-
-    # def _message_to_dict(self, msg):
-    #     return {
-    #         gd.SENDER_KEY: msg.sender,
-    #         gd.RECEIVER_KEY: msg.receiver,
-    #         gd.SUBJECT_KEY: msg.subject,
-    #         gd.OBJ_KEY: msg.obj,
-    #         gd.PREDICATE_KEY: msg.predicate,
-    #         gd.SENDER_REF_KEY: msg.sender_ref
-    #     }
-
-    # def _push_message_to_channel_pending_message_repo(self, channel_id, channel_response, msg):
-    #     if channel_id == DiscreteGenericMemoryChannel.ID:
-    #         return self.channel_pending_message_repo.post_job(
-    #             {
-    #                 'channel_id': channel_id,
-    #                 'channel_response': json.loads(channel_response),
-    #                 'message': self._message_to_dict(msg)
-    #             }
-    #         )
-    #     return False
 
     def _update_message_status(self, msg, new_status, channel_id=None, channel_msg_id=None):
         # In the message lake
