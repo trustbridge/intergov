@@ -1,5 +1,6 @@
 import datetime
 from time import sleep
+from urllib.parse import urljoin
 
 from intergov.loggers import logging
 from intergov.processors.common import env
@@ -11,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class SubscriptionHandler:
+    CHANNEL_API_SUBSCRIBE_ENDPOINT = '/messages/subscriptions/by_jurisdiction'
+
     def __init__(self):
         self.last_subscribed_at = None
         self.subscription_period = datetime.timedelta(days=1)
@@ -26,7 +29,7 @@ class SubscriptionHandler:
         return not (self.last_subscribed_at and now - self.last_subscribed_at < self.subscription_period)
 
     def subscribe(self, channel):
-        channel_url = channel['ChannelUrl']
+        channel_url = self.get_channel_subscribe_endpoint_url(channel)
         now = datetime.datetime.utcnow()
         try:
             callback_url = self.get_callback_url(channel)
@@ -40,7 +43,10 @@ class SubscriptionHandler:
 
     @staticmethod
     def get_callback_url(channel):
-        return '{base_url}/channel-message/{Id}'.format(base_url=env.MESSAGE_RX_API_URL, **channel)
+        return urljoin(env.MESSAGE_RX_API_URL, 'channel-message/{Id}'.format(**channel))
+
+    def get_channel_subscribe_endpoint_url(self, channel):
+        return urljoin(channel['ChannelUrl'], self.CHANNEL_API_SUBSCRIBE_ENDPOINT)
 
 
 if __name__ == '__main__':

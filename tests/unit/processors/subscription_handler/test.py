@@ -16,18 +16,18 @@ class TestSubscriptionHandler:
             self.env = mocked_env
             self.env.MESSAGE_RX_API_URL = 'http://mock_message_rx_api'
             self.env.COUNTRY = 'AU'
-            self.channel_subscribe_url = "https://sharedchannel.services.devnet.trustbridge.io/"
+            self.channel_subscribe_url = "https://sharedchannel.services.devnet.trustbridge.io/messages/subscriptions/by_jurisdiction"
             self.env.ROUTING_TABLE = [
                 {
                     "Id": "1",
                     "Jurisdiction": "AU",
-                    "ChannelUrl": self.channel_subscribe_url,
+                    "ChannelUrl": "https://sharedchannel.services.devnet.trustbridge.io/",
                     "ChannelAuth": "Cognito/JWT"
                 },
                 {
                     "Id": "2",
                     "Jurisdiction": "SG",
-                    "ChannelUrl": self.channel_subscribe_url,
+                    "ChannelUrl": "https://sharedchannel.services.devnet.trustbridge.io/",
                     "ChannelAuth": "Cognito/JWT"
                 },
                 {
