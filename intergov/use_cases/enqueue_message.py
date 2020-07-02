@@ -4,6 +4,10 @@ from intergov.monitoring import statsd_timer
 logger = logging.getLogger(__name__)
 
 
+class EnqueueMessageFailure(Exception):
+    pass
+
+
 class EnqueueMessageUseCase:
     """
     Used by the message_api(tx) and message_rx_api
@@ -27,9 +31,9 @@ class EnqueueMessageUseCase:
     def execute(self, message):
         logger.info("Posting the message %s", message)
         if not message.is_valid():
-            raise Exception("can't enqueue invalid message")
+            raise EnqueueMessageFailure("can't enqueue invalid message")
         if not message.sender_ref:
-            raise Exception("received messages must have sender_ref")
+            raise EnqueueMessageFailure("received messages must have sender_ref")
 
         posted = self.bc_inbox.post(message)
 
