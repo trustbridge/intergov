@@ -28,7 +28,7 @@ class MultichannelWorker(object):
     Iterate over the RouteToChannelUseCase.
     """
 
-    ROUTING_TABLE = env_json("IGL_MCHR_ROUTING_TABLE")
+    ROUTING_TABLE = env_json("IGL_MCHR_ROUTING_TABLE", default=[])
 
     def _prepare_outbox_repo(self, conf):
         outbox_repo_conf = env_postgres_config('PROC_BCH_OUTBOX')
