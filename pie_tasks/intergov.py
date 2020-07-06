@@ -31,6 +31,13 @@ def start():
     with INSTANCE_ENVIRONMENT():
         DOCKER_COMPOSE.cmd('up', options=['-d'])
 
+
+@task
+def start_sync():
+    with INSTANCE_ENVIRONMENT():
+        DOCKER_COMPOSE.cmd('up')
+
+
 @task
 def stop():
     with INSTANCE_ENVIRONMENT():
