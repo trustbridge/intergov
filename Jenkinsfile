@@ -22,7 +22,7 @@ pipeline {
 
     environment {
         DOCKER_BUILD_DIR = "${env.DOCKER_STAGE_DIR}/${BUILD_TAG}"
-        COMPOSE_PROJECT_NAME = "igl_node_au"
+        COMPOSE_PROJECT_NAME = "igl-node-au"
     }
 
     parameters {
@@ -54,7 +54,7 @@ pipeline {
                     steps {
                         dir("${env.DOCKER_BUILD_DIR}/test/intergov/") {
                             sh '''#!/bin/bash
-                                touch docker/node.igl_node_au-local.env
+                                touch docker/node.igl-node-au-local.env
                                 python3.6 pie.py intergov.build
                                 python3.6 pie.py intergov.start
                                 echo "waiting for startup"
