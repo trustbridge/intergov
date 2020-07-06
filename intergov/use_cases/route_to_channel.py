@@ -29,11 +29,6 @@ class RouteToChannelUseCase:
 
     def __init__(self, routing_table):
         self.ROUTING_TABLE = routing_table
-        # self.channel_config = channel_config
-        # self.channels = []
-        # for config in channel_config:
-        #     channel = config['type']
-        #     self.channels.append(channel(config))
 
     @statsd_timer("usecase.RouteToChannelUseCase.execute")
     def execute(self, message):
@@ -82,18 +77,4 @@ class RouteToChannelUseCase:
                         str(channel_instance),
                     )
 
-        # Some old logic here
-        # for channel in self.channels:
-        #     channel_filter = channel.channel_filter
-        #     if not channel_filter.screen_message(message):
-        #         response = channel.post_message(message)
-        #         if isinstance(response, bool):
-        #             # such a stupid way to work with things,
-        #             # but upper use-case expects that, and some channels return Bool,
-        #             # so...
-        #             response = (
-        #                 '{"status": %s, '
-        #                 '"link": "dumbid=http://non-domain.non-tld"}'
-        #             ) % 'true' if response else 'false'
-        #         return channel.ID, response
         return result
