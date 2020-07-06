@@ -2,11 +2,14 @@ from flask import (
     Blueprint, Response, request
 )
 
+from intergov.apis.message_rx.conf import Config
 from intergov.monitoring import statsd_timer
 from intergov.loggers import logging
 
 from intergov.apis.common.utils import routing
-
+from intergov.repos.channel_notifications_inbox import ChannelNotificationRepo
+from intergov.use_cases.process_channel_notifications import EnqueueChannelNotificationUseCase
+from intergov.use_cases.route_to_channel import get_channel_by_id
 
 blueprint = Blueprint('message', __name__)
 logger = logging.getLogger(__name__)
@@ -36,11 +39,10 @@ def channel_message_receive(channel_id):
     Handles the pings
     """
     body = request.get_json(silent=True)
-    new_ch_message_id = body["id"]
-    # TODO: retrieve that message from the channel worker
-    # (using JWT auth we have)
-    logger.warning(
-        "Got notification about channel message %s but not processing it yet, channel_id: %s",
-        new_ch_message_id, channel_id
+    repo = ChannelNotificationRepo(
+        Config.CHANNEL_NOTIFICATION_REPO_CONF
     )
+    use_case = EnqueueChannelNotificationUseCase(channel_notification_repo=repo)
+    channel = get_channel_by_id(channel_id, Config.ROUTING_TABLE)
+    use_case.execute(channel, body)
     return Response()

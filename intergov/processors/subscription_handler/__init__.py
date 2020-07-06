@@ -5,8 +5,9 @@ from urllib.parse import urljoin
 from intergov.loggers import logging
 from intergov.processors.common import env
 from intergov.processors.common.utils import get_channels_for_local_jurisdiction
-from intergov.use_cases import SubscribeByJurisdictionUseCase
-from intergov.use_cases.subscribe_by_jurisdiction import SubscriptionFailure, InvalidSubscriptionParameters
+from intergov.use_cases.request_channel_api import (
+    RequestChannelAPIUseCase, SubscriptionFailure, InvalidSubscriptionParameters
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class SubscriptionHandler:
         try:
             callback_url = self.get_callback_url(channel)
             logger.info('Sending subscription request to %s', channel_url)
-            SubscribeByJurisdictionUseCase(channel_url, callback_url, env.COUNTRY).subscribe()
+            RequestChannelAPIUseCase(channel).subscribe_by_jurisdiction(callback_url, env.COUNTRY)
         except (SubscriptionFailure, InvalidSubscriptionParameters) as e:
             logger.error(e)
         else:

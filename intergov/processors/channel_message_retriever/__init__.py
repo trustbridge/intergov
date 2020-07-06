@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class ChannelMessageRetrieveProcessor:
     def __init__(self):
-        channel_notification_repo_conf = env_queue_config('PROC_CHANNEL_NOTIFICATION_REPO')
+        channel_notification_repo_conf = env_queue_config('CHANNEL_NOTIFICATION_REPO')
         channel_notification_repo = ChannelNotificationRepo(channel_notification_repo_conf)
 
         bc_inbox_repo_conf = env_queue_config('PROC_BC_INBOX')

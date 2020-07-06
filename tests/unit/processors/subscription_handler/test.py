@@ -22,13 +22,13 @@ class TestSubscriptionHandler:
                     "Id": "1",
                     "Jurisdiction": "AU",
                     "ChannelUrl": "https://sharedchannel.services.devnet.trustbridge.io/",
-                    "ChannelAuth": "Cognito/JWT"
+                    "ChannelAuth": "None"
                 },
                 {
                     "Id": "2",
                     "Jurisdiction": "SG",
                     "ChannelUrl": "https://sharedchannel.services.devnet.trustbridge.io/",
-                    "ChannelAuth": "Cognito/JWT"
+                    "ChannelAuth": "None"
                 },
                 {
                     "Id": "3",

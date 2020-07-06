@@ -63,7 +63,7 @@ class TestProcessChannelNotificationUseCase:
                 "ChannelAuthDetails": {
                     "client_id": "XX",
                     "client_secret": "YY",
-                    "token_endpoint": "https://xx/",
+                    "token_endpoint": "https://token_endpoint.com/",
                     "scope": "https://sharedchannel.services.devnet.trustbridge.io/full"
                 }
             },
@@ -79,6 +79,10 @@ class TestProcessChannelNotificationUseCase:
 
     @mock.patch('uuid.uuid4', return_value='11111111-1111-1111-1111-111111111')
     def test_execute__when_new_job__should_get_message_from_channel_and_enqueue_it_to_bc_inbox(self, uuid_mock):
+        self.mocked_responses.add(responses.POST, url='https://token_endpoint.com/', json={
+            'expires_in': 100,
+            'access_token': 'token'
+        })
         self.mocked_responses.add(responses.GET, url='https://sharedchannel.services.devnet.trustbridge.io/messages/123', json={
             'id': 123,
             'status': 'confirmed',
@@ -107,6 +111,10 @@ class TestProcessChannelNotificationUseCase:
         }
 
     def test_execute__when_api_failure__should_retry(self):
+        self.mocked_responses.add(responses.POST, url='https://token_endpoint.com/', json={
+            'expires_in': 100,
+            'access_token': 'token'
+        })
         self.mocked_responses.add(
             responses.GET,
             url='https://sharedchannel.services.devnet.trustbridge.io/messages/123',

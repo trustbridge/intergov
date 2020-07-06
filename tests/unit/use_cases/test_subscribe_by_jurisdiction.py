@@ -1,35 +1,42 @@
 import pytest
 import responses
 
-from intergov.use_cases.subscribe_by_jurisdiction import (
-    SubscribeByJurisdictionUseCase, SubscriptionFailure, InvalidSubscriptionParameters
+from intergov.use_cases.request_channel_api import (
+    RequestChannelAPIUseCase, InvalidSubscriptionParameters, SubscriptionFailure
 )
 
 
 @pytest.mark.usefixtures("mocked_responses")
-class TestSubscribeByJurisdictionUseCase:
+class TestSubscribeByJurisdiction:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.channel_config = {
+            "Id": "1234",
+            "Name": "shared db channel to Australia",
+            "Jurisdiction": "AU",
+            "Predicate": "UN.CEFACT.",
+            "ChannelUrl": "http://channel_api_url:8000",
+        }
+        self.channel_api_url = 'http://channel_api_url:8000/messages/subscriptions/by_jurisdiction'
+        self.use_case = RequestChannelAPIUseCase(
+            channel_config=self.channel_config
+        )
+
     def test_use_case__with_missing_params__should_raise_exception(self):
         with pytest.raises(InvalidSubscriptionParameters):
-            SubscribeByJurisdictionUseCase(channel_api_url='', callback_url='something', igl_country='something')
+            self.use_case.subscribe_by_jurisdiction(callback_url='', country='something')
         with pytest.raises(InvalidSubscriptionParameters):
-            SubscribeByJurisdictionUseCase(channel_api_url='something', callback_url='', igl_country='something')
-        with pytest.raises(InvalidSubscriptionParameters):
-            SubscribeByJurisdictionUseCase(channel_api_url='something', callback_url='something', igl_country='')
+            self.use_case.subscribe_by_jurisdiction(callback_url='something', country='')
 
     def test_use_case__when_channel_response_not_ok__should_raise_exception(self):
-        channel_api_url = 'http://channel_api_url:8000/message/subscription/by_jurisdiction'
-        self.mocked_responses.add(responses.POST, channel_api_url, status=400)
+        self.mocked_responses.add(responses.POST, self.channel_api_url, status=400)
         with pytest.raises(SubscriptionFailure):
-            SubscribeByJurisdictionUseCase(
-                channel_api_url=channel_api_url,
-                callback_url='https://callback.url', igl_country='AU', secret='123').subscribe()
+            response = self.use_case.subscribe_by_jurisdiction(callback_url='https://callback.url', country='AU', secret='123')
+            response.raise_for_status()
 
     def test_use_case__happy_path(self):
-        channel_api_url = 'http://channel_api_url:8000/message/subscription/by_jurisdiction'
-        self.mocked_responses.add(responses.POST, channel_api_url, status=202)
-        SubscribeByJurisdictionUseCase(
-            channel_api_url=channel_api_url,
-            callback_url='https://callback.url', igl_country='AU', secret='123').subscribe()
+        self.mocked_responses.add(responses.POST, self.channel_api_url, status=202)
+        self.use_case.subscribe_by_jurisdiction(callback_url='https://callback.url', country='AU', secret='123')
 
         body = ('hub.mode=subscribe&'
                 'hub.callback=https%3A%2F%2Fcallback.url&'

@@ -1,4 +1,4 @@
-from intergov.conf import env_bool, env_queue_config
+from libtrustbridge.utils.conf import env_bool, env_json, env_queue_config
 
 
 class Config(object):
@@ -6,7 +6,8 @@ class Config(object):
     DEBUG = env_bool('IGL_DEBUG', default=True)
     TESTING = env_bool('IGL_TESTING', default=True)
 
-    BC_INBOX_CONF = env_queue_config('MSG_RX_API_BC_INBOX')
+    CHANNEL_NOTIFICATION_REPO_CONF = env_queue_config('CHANNEL_NOTIFICATION_REPO')
+    ROUTING_TABLE = env_json("IGL_MCHR_ROUTING_TABLE")
 
 
 class TestConfig(Config):

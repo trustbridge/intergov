@@ -1,23 +1,18 @@
 import random
 import uuid
-from urllib.parse import urljoin
-
-import requests
 
 from intergov.domain.wire_protocols.generic_discrete import Message
 from intergov.loggers import logging
 from intergov.repos.bc_inbox.elasticmq.elasticmqrepo import BCInboxRepo
 from intergov.repos.channel_notifications_inbox import ChannelNotificationRepo
 from intergov.use_cases import EnqueueMessageUseCase
+from intergov.use_cases.request_channel_api import RequestChannelAPIUseCase, ChannelApiFailure
+from intergov.use_cases.route_to_channel import get_channel_by_id
 
 logger = logging.getLogger()
 
 
 class ChannelNotFound(Exception):
-    pass
-
-
-class ChannelApiFailure(Exception):
     pass
 
 
@@ -93,25 +88,19 @@ class ProcessChannelNotificationUseCase(ChannelNotificationUseCase):
             raise
 
     def process(self, job_payload):
-        channel = job_payload[self.CHANNEL_ID]
+        channel_id = job_payload[self.CHANNEL_ID]
+        channel = get_channel_by_id(channel_id, self.routing_table)
+        if not channel:
+            raise ChannelNotFound("Channel not found, id: %s" % channel_id)
+
         notification_payload = job_payload[self.NOTIFICATION_PAYLOAD]
-        url = self._get_channel_message_endpoint_url(channel, notification_payload['id'])
-        message = self._get_message(url)
+        message = self._get_message(channel, notification_payload['id'])
         self.enqueue_message_use_case.execute(message)
 
-    def _get_message(self, url):
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise ChannelApiFailure("Could not get message from Channel API, url:%s, response:%s" % (url, response))
-        message_payload = response.json()
+    def _get_message(self, channel, message_id):
+        request_channel_use_case = RequestChannelAPIUseCase(channel)
+        message_payload = request_channel_use_case.get_message(message_id)
         message = Message.from_dict(message_payload['message'])
         message.status = "received"
         message.sender_ref = str(uuid.uuid4())
         return message
-
-    def _get_channel_message_endpoint_url(self, channel_id, message_id):
-        for channel in self.routing_table:
-            if channel['Id'] == channel_id:
-                return urljoin(channel['ChannelUrl'], '%s/%s' % (self.CHANNEL_API_GET_MESSAGE_ENDPOINT, message_id))
-
-        raise ChannelNotFound("Channel not found, id: %s" % channel_id)
