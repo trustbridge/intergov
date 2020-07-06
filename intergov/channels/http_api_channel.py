@@ -46,7 +46,7 @@ class HttpApiChannel:
 
     def post_message(self, message):
         logger.info(
-            "Sending message %s to the %s",
+            "Sending message %s to %s",
             message,
             self.CONFIG["ChannelUrl"]
         )

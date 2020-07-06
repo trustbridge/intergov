@@ -21,8 +21,8 @@ volumes:
 x-services:
   base: &base_service
     build:
-      context: .
-      dockerfile: ./Dockerfile-demo
+      context: ../
+      dockerfile: docker/node.Dockerfile
     image: intergov-demo-base
     depends_on:
       - postgresql
@@ -33,17 +33,17 @@ x-services:
       # container without rebuilding, but saved artefacts from the container
       # itself to the repo
       # For production-like use it may be disabled
-      - ./intergov:/src/intergov
-      - ./tests:/src/tests
-      - ./htmlcov:/src/htmlcov
+      - ../intergov:/src/intergov
+      - ../tests:/src/tests
+      - ../htmlcov:/src/htmlcov
     command: bash -c "cd /src && echo "Hello I'm a container""
     networks:
       - apis_external
       - internal
     env_file:
-      - ./demo-default.env
-      - ./demo-${COMPOSE_PROJECT_NAME}.env
-      - ./demo-${COMPOSE_PROJECT_NAME}-local.env
+      - ./node.env
+      - ./node.${COMPOSE_PROJECT_NAME}.env
+      - ./node.${COMPOSE_PROJECT_NAME}-local.env
 
   base_api: &base_api_service
     <<: *base_service
@@ -80,7 +80,7 @@ services:
 
   elasticmq:
     image: softwaremill/elasticmq
-    volumes: ['./tests/local_elasticmq.conf:/opt/elasticmq.conf']
+    volumes: ['../tests/local_elasticmq.conf:/opt/elasticmq.conf']
     logging:
       driver: none
     networks:
@@ -99,7 +99,7 @@ services:
     logging:
       driver: none
     volumes:
-      - ./var-${COMPOSE_PROJECT_NAME}/minio-data:/minio-data
+      - ./volumes/${COMPOSE_PROJECT_NAME}/var/minio-data:/minio-data
     networks:
       - internal
 
@@ -142,7 +142,7 @@ services:
     # ports: ['${PORTPREFIX}01:80']
     command: bash -c "cd /src/tests/helpers/servers &&
       FLASK_APP=dummy_test_helper
-      flask run --host=0.0.0.0 --port=80"
+      flask run --host=0.0.0.0"
 
   message_api:
     <<: *base_api_service
@@ -150,26 +150,26 @@ services:
     depends_on:
       - elasticmq
       - minio
-    ports: ['${PORTPREFIX}01:80']
+    ports: ['${MESSAGE_API_BIND_HOST_PORT}:5000']
     command: bash -c "cd /src/intergov &&
       FLASK_APP=apis.message.app
-      flask run --host=0.0.0.0 --port=80"
+      flask run --host=0.0.0.0"
 
   subscriptions_api:
     <<: *base_api_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_subscriptions_api
-    ports: ['${PORTPREFIX}02:80']
+    ports: ['${SUBSCRIPTIONS_API_BIND_HOST_PORT}:5000']
     command: bash -c "cd /src/intergov &&
       FLASK_APP=apis.subscriptions.app
-      flask run --host=0.0.0.0 --port=80"
+      flask run --host=0.0.0.0"
 
   document_api:
     <<: *base_api_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_document_api
-    ports: ['${PORTPREFIX}03:80']
+    ports: ['${DOCUMENT_API_BIND_HOST_PORT}:5000']
     command: bash -c "cd /src/intergov &&
       FLASK_APP=apis.document.app
-      flask run --host=0.0.0.0 --port=80"
+      flask run --host=0.0.0.0"
     networks:
       - internal
       - apis_external
@@ -181,10 +181,10 @@ services:
     depends_on:
       - elasticmq
       - minio
-    ports: ['${PORTPREFIX}09:80']
+    ports: ['${MESSAGE_RX_API_BIND_HOST_PORT}:5000']
     command: bash -c "cd /src/intergov &&
       FLASK_APP=apis.message_rx.app
-      flask run --host=0.0.0.0 --port=80"
+      flask run --host=0.0.0.0"
 
 
   ##
