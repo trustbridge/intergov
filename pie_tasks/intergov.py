@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 from pie import *
@@ -24,6 +25,15 @@ def INSTANCE_ENVIRONMENT():
 def build():
     with INSTANCE_ENVIRONMENT():
         DOCKER_COMPOSE.cmd('build')
+
+
+@task
+def p():
+    with INSTANCE_ENVIRONMENT():
+        if len(sys.argv) == 2:
+            print("Some parameters are required")
+        else:
+            DOCKER_COMPOSE.cmd(sys.argv[2], options=sys.argv[3:])
 
 
 @task
