@@ -78,3 +78,9 @@ class RouteToChannelUseCase:
                     )
 
         return result
+
+
+def get_channel_by_id(channel_id, routing_table):
+    for channel in routing_table:
+        if channel['Id'] == channel_id:
+            return channel

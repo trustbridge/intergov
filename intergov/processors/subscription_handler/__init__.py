@@ -5,8 +5,9 @@ from urllib.parse import urljoin
 from intergov.loggers import logging
 from intergov.processors.common import env
 from intergov.processors.common.utils import get_channels_for_local_jurisdiction
-from intergov.use_cases import SubscribeByJurisdictionUseCase
-from intergov.use_cases.subscribe_by_jurisdiction import SubscriptionFailure, InvalidSubscriptionParameters
+from intergov.use_cases.request_channel_api import (
+    RequestChannelAPIUseCase, SubscriptionFailure, InvalidSubscriptionParameters
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,12 +21,14 @@ class SubscriptionHandler:
 
     def run(self):
         for channel in get_channels_for_local_jurisdiction(env.ROUTING_TABLE, env.COUNTRY):
+            logger.info("Subscribe for channel, %r", channel)
             if self.should_update_subscription():
                 self.subscribe(channel)
+            else:
+                logger.info("Subscription should not be updated, sleeping...")
 
     def should_update_subscription(self):
         now = datetime.datetime.utcnow()
-
         return not (self.last_subscribed_at and now - self.last_subscribed_at < self.subscription_period)
 
     def subscribe(self, channel):
@@ -34,7 +37,7 @@ class SubscriptionHandler:
         try:
             callback_url = self.get_callback_url(channel)
             logger.info('Sending subscription request to %s', channel_url)
-            SubscribeByJurisdictionUseCase(channel_url, callback_url, env.COUNTRY).subscribe()
+            RequestChannelAPIUseCase(channel).subscribe_by_jurisdiction(callback_url, env.COUNTRY)
         except (SubscriptionFailure, InvalidSubscriptionParameters) as e:
             logger.error(e)
         else:
@@ -50,6 +53,7 @@ class SubscriptionHandler:
 
 
 if __name__ == '__main__':
+    processor = SubscriptionHandler()
     while True:
-        SubscriptionHandler().run()
+        processor.run()
         sleep(60)

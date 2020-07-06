@@ -19,7 +19,7 @@ from intergov.use_cases.subscription_register import SubscriptionRegisterUseCase
 from intergov.use_cases.reject_pending_message import RejectPendingMessageUseCase  # NOQA
 
 from .retrieve_and_store_foreign_documents import RetrieveAndStoreForeignDocumentsUseCase  # NOQA
-from .subscribe_by_jurisdiction import SubscribeByJurisdictionUseCase  # NOQA
+from .request_channel_api import RequestChannelAPIUseCase  # NOQA
 # to be returned:
 # from intergov.use_cases.retrieve_and_store_foreign_documents import *  # NOQA
 # from intergov.use_cases.get_message_list import *  # NOQA
