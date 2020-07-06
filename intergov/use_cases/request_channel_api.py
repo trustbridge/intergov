@@ -50,7 +50,7 @@ class RequestChannelAPIUseCase:
         endpoint = self.CHANNEL_API_SUBSCRIBE_BY_JURISDICTION_ENDPOINT
         response = self.post(endpoint, data=params)
         if not response.status_code == 202:
-            raise SubscriptionFailure("Channel returned bad response, %r" % response)
+            raise SubscriptionFailure("Channel returned bad response, %r" % response.content)
 
     def get(self, endpoint):
         url = self.get_url(endpoint)
@@ -58,19 +58,17 @@ class RequestChannelAPIUseCase:
 
     def post(self, endpoint, data=None, json=None):
         url = self.get_url(endpoint)
+        logger.debug('Sending POST to %s, data: %r, json: %s', url, data, json)
         return requests.post(url, data=data, json=json, headers=self.get_headers())
 
-    def get_headers(self, **headers):
-        result = {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
+    def get_headers(self):
+        headers = {}
         if self.auth_use_case:
             token = self.auth_use_case.get_jwt()
-            result["Authorization"] = f"Bearer {token}"
+            headers["Authorization"] = f"Bearer {token}"
 
-        result.update(**headers)
-        return result
+        headers.update(**headers)
+        return headers
 
     def get_url(self, endpoint):
         return urljoin(self.config['ChannelUrl'], endpoint)

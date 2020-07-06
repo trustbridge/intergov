@@ -16,9 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 @statsd_timer("api.message_rx.endpoint.channel_message_confirm")
-@blueprint.route('/channel-message', methods=['GET'])
-# @routing.mimetype(['application/x-www-form-urlencoded'])
-def channel_message_confirm():
+@blueprint.route('/channel-message/<channel_id>', methods=['GET'])
+def channel_message_confirm(channel_id):
     """
     Handles subscription verification requests
     https://www.w3.org/TR/websub/#hub-verifies-intent
@@ -28,6 +27,9 @@ def channel_message_confirm():
     """
     # TODO: validate topic and mode
     # TODO: validate signature header
+    channel = get_channel_by_id(channel_id, Config.ROUTING_TABLE)
+    if not channel:
+        return Response("Bad channel_id", status=400)
     return Response(request.args.get('hub.challenge'))
 
 

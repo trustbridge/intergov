@@ -88,6 +88,7 @@ class ProcessChannelNotificationUseCase(ChannelNotificationUseCase):
             raise
 
     def process(self, job_payload):
+        logger.debug("Processing job: %r", job_payload)
         channel_id = job_payload[self.CHANNEL_ID]
         channel = get_channel_by_id(channel_id, self.routing_table)
         if not channel:

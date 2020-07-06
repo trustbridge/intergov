@@ -227,6 +227,20 @@ services:
     command: bash -c "cd /src & sleep 10 &&
       python intergov/processors/rejected_status_updater/__init__.py"
 
+  subscription_handler_processor:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_subscription_handler_processor
+    restart: on-failure
+    command: bash -c "cd /src & sleep 10 &&
+               python intergov/processors/subscription_handler/__init__.py"
+
+  channel_message_retriever:
+    <<: *base_service
+    container_name: ${COMPOSE_PROJECT_NAME}_ig_channel_message_retriever
+    restart: on-failure
+    command: bash -c "cd /src & sleep 10 &&
+      python intergov/processors/channel_message_retriever/__init__.py"
+
   # may not be needed after channels support subscriptions
   channel_poller:
     <<: *base_service
