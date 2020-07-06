@@ -39,6 +39,12 @@ def start_sync():
 
 
 @task
+def logs():
+    with INSTANCE_ENVIRONMENT():
+        DOCKER_COMPOSE.cmd('logs', options=['--tail=40', '-f'])
+
+
+@task
 def stop():
     with INSTANCE_ENVIRONMENT():
         DOCKER_COMPOSE.cmd('down')
