@@ -1,5 +1,6 @@
 import json
 from io import BytesIO
+from urllib.parse import urljoin
 
 import requests
 
@@ -54,18 +55,8 @@ class RetrieveAndStoreForeignDocumentsUseCase:
         multihash = job['object']
         sender = Country(job['sender'])
         # 1. check if this object is not in the object lake yet
-        exists = True
-        try:
-            # TODO: replace by just exist check instead of reading the whole file
-            # maybe create and use an '.exists(multihash)' method on object_lake
-            self.object_lake.get_body(multihash)
-        except Exception as e:
-            if e.__class__.__name__ == 'NoSuchKey':
-                exists = False
-            else:
-                raise e
         # 2. if not - download it to the object lake
-        if not exists:
+        if not self._is_in_object_lake(multihash):
             self._download_remote_obj(sender, multihash)
         # 3. Give receiver access to the object
         self.object_acl_repo.allow_access_to(
@@ -77,11 +68,25 @@ class RetrieveAndStoreForeignDocumentsUseCase:
         self.object_retrieval.delete(job_id)
         return True
 
-    def _download_remote_obj(self, sender, mh):
-        logger.info("Downloading %s from %s as %s", mh, sender, self.country)
+    def _is_in_object_lake(self, multihash):
+        try:
+            # TODO: replace by just exist check instead of reading the whole file
+            # maybe create and use an '.exists(multihash)' method on object_lake
+            self.object_lake.get_body(multihash)
+        except Exception as e:
+            if e.__class__.__name__ == 'NoSuchKey':
+                return False
+            else:
+                raise e
+        return True
+
+    def _download_remote_obj(self, sender, multihash):
+        logger.info("Downloading %s from %s as %s", multihash, sender, self.country)
         remote_doc_api_url = sender.object_api_base_url()
+        url = urljoin(remote_doc_api_url, multihash)
+
         doc_resp = requests.get(
-            remote_doc_api_url + mh,
+            url,
             headers={
                 'Authorization': 'JWTBODY {}'.format(
                     json.dumps({
@@ -92,7 +97,7 @@ class RetrieveAndStoreForeignDocumentsUseCase:
                 )
             }
         )
-        logger.info("GET %s: status %s", remote_doc_api_url + mh, doc_resp.status_code)
+        logger.info("GET %s: status %s", url, doc_resp.status_code)
         # TODO: we should process various response codes differently:
         # e.g. if 5xx, rescuedule for later
         # if 429, rescuedule for later with increasing wait times
@@ -101,7 +106,7 @@ class RetrieveAndStoreForeignDocumentsUseCase:
         assert doc_resp.status_code in (200, 201), "{} {}".format(doc_resp, doc_resp.content)
         # logger.info("For URL %s we got resp %s", remote_doc_api_url, doc_resp)
         self.object_lake.post_from_file_obj(
-            mh,
+            multihash,
             BytesIO(doc_resp.content)
         )
 
@@ -111,7 +116,7 @@ class RetrieveAndStoreForeignDocumentsUseCase:
         except Exception:
             # not a json, which is fine
             pass
-            logger.info("Downloaded object %s is not JSON file", mh)
+            logger.info("Downloaded object %s is not JSON file", multihash)
         else:
             # TODO: security: document spider will blindly download any multihash
             # (including links in links in links).
@@ -133,6 +138,6 @@ class RetrieveAndStoreForeignDocumentsUseCase:
                                 'action': 'download-object',
                                 'sender': sender.name,
                                 'object': link_qmhash,
-                                'parent': mh
+                                'parent': multihash
                             }
                         )

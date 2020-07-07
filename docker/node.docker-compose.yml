@@ -259,6 +259,7 @@ services:
   obj_spider:
     <<: *base_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_obj_spider
+    restart: on-failure
     command: bash -c "cd /src & sleep 11 &&
       python intergov/processors/obj_spider/__init__.py"
     networks:
