@@ -7,10 +7,10 @@ from flask import (
 
 from intergov.domain.country import Country
 from intergov.domain.uri import URI
-from intergov.apis.common.demoauth import demo_auth
 from intergov.apis.common.errors import (
     InternalServerError
 )
+from intergov.apis.common.demoauth import demo_auth
 from intergov.apis.common.utils import routing
 from intergov.loggers import logging  # NOQA
 from intergov.monitoring import statsd_timer
@@ -90,10 +90,20 @@ def document_fetch(uri):
         object_lake_repo=object_lake_repo,
     )
 
-    try:
-        auth_country = Country(request.auth['country'])
-    except Exception as e:
-        raise BadCountryNameError(e)
+    request_auth = getattr(request, "auth", None)
+    if request_auth and 'country' in request_auth:
+        try:
+            auth_country = Country(request_auth['country'])
+        except Exception as e:
+            raise BadCountryNameError(e)
+    else:
+        # no auth is provided, trust the GET request
+        # assuming JWT will handle it
+        # TODO: ensure that the auth provided allows access from that country
+        try:
+            auth_country = Country(request.args["as_country"])
+        except Exception as e:
+            raise BadCountryNameError(e)
 
     try:
         document_body = use_case.execute(uri, auth_country)

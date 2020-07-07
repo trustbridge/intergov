@@ -179,7 +179,7 @@ class HttpApiChannel:
         logger.warning(
             "Although we have to subscribe to channel %s message %s updates,"
             " it's not implemented yet",
-            self, ch_msg_id,
+            str(self), ch_msg_id,
         )
 
 

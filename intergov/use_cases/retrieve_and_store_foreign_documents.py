@@ -87,6 +87,10 @@ class RetrieveAndStoreForeignDocumentsUseCase:
 
         doc_resp = requests.get(
             url,
+            {
+                "as_country": self.country.name,
+            },
+            # TODO: cognito JWT and other auth methods
             headers={
                 'Authorization': 'JWTBODY {}'.format(
                     json.dumps({
