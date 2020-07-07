@@ -48,7 +48,7 @@ class RouteToChannelUseCase:
                 # this one fits
                 channel_instance = routing_rule["ChannelInstance"]
                 if channel_instance.screen_message(message):
-                    logger.info(
+                    logger.warning(
                         "[%s] Channel %s screens the message",
                         message.sender_ref,
                         routing_rule,

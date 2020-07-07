@@ -21,11 +21,11 @@ class SubscriptionHandler:
 
     def run(self):
         for channel in get_channels_for_local_jurisdiction(env.ROUTING_TABLE, env.COUNTRY):
-            logger.info("Subscribe for channel, %r", channel)
             if self.should_update_subscription():
+                logger.info("Subscribing for channel..., %r", channel["Name"])
                 self.subscribe(channel)
-            else:
-                logger.info("Subscription should not be updated, sleeping...")
+            # else:
+            #     logger.info("Subscription should not be updated, sleeping...")
 
     def should_update_subscription(self):
         now = datetime.datetime.utcnow()
@@ -54,6 +54,9 @@ class SubscriptionHandler:
 
 if __name__ == '__main__':
     processor = SubscriptionHandler()
+    sleep_period = 30  # will be increased
     while True:
         processor.run()
-        sleep(60)
+        sleep(sleep_period)
+        if sleep_period < 60 * 5:
+            sleep_period += 10  # we slowly increate this timeout

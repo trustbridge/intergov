@@ -21,18 +21,21 @@ class TestSubscriptionHandler:
                 {
                     "Id": "1",
                     "Jurisdiction": "AU",
+                    "Name": "to AU",
                     "ChannelUrl": "https://sharedchannel.services.devnet.trustbridge.io/",
                     "ChannelAuth": "None"
                 },
                 {
                     "Id": "2",
                     "Jurisdiction": "SG",
+                    "Name": "to SG",
                     "ChannelUrl": "https://sharedchannel.services.devnet.trustbridge.io/",
                     "ChannelAuth": "None"
                 },
                 {
                     "Id": "3",
                     "Jurisdiction": "FR",
+                    "Name": "to FR",
                     "ChannelUrl": "http://docker-host:7500/",
                     "ChannelAuth": "None"
                 }
