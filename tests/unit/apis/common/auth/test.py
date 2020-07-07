@@ -63,34 +63,6 @@ def test(app, client):
         )
         assert resp.status_code == HTTPStatus.OK
 
-    # test auth no role error
-    resp = client.get(
-        '/authenticated-role-user',
-        headers=_create_auth_headers(VALID_AUTH_NO_ROLE_JSON)
-    )
-    assert resp.status_code == HTTPStatus.UNAUTHORIZED
-
-    # testin invalid role error
-    resp = client.get(
-        '/authenticated-role-admin',
-        headers=_create_auth_headers(VALID_AUTH_USER_JSON)
-    )
-    assert resp.status_code == HTTPStatus.UNAUTHORIZED
-
-    # no prefix in the token header
-    resp = client.get(
-        '/authenticated-no-role',
-        headers={
-            'Authorization': json.dumps(VALID_AUTH_NO_ROLE_JSON)
-        }
-    )
-    assert resp.status_code == HTTPStatus.UNAUTHORIZED
-
-    # corrupt json header value
-    headers = _create_auth_headers(VALID_AUTH_NO_ROLE_JSON)
-    headers['Authorization'] += "Not a json }}{{{"
-    resp = client.get(
-        '/authenticated-no-role',
-        headers=headers
-    )
-    assert resp.status_code == HTTPStatus.UNAUTHORIZED
+    # we don't test for invalid values because demo auth became non-restrictive
+    # and just does nothing, not attaching the .auth to the request,
+    # allowing view to handle that.
