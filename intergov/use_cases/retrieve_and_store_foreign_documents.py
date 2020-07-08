@@ -4,6 +4,8 @@ from urllib.parse import urljoin
 
 import requests
 
+from intergov.apis.common.interapi_auth import AuthMixin
+from intergov.conf import env_json
 from intergov.domain.country import Country
 from intergov.loggers import logging
 from intergov.monitoring import statsd_timer
@@ -11,7 +13,7 @@ from intergov.monitoring import statsd_timer
 logger = logging.getLogger(__name__)
 
 
-class RetrieveAndStoreForeignDocumentsUseCase:
+class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
     """
     Processes single request from the queue to download
     some remote document.
@@ -80,6 +82,51 @@ class RetrieveAndStoreForeignDocumentsUseCase:
                 raise e
         return True
 
+    def _get_docapi_auth_headers(self, source_jrd, doc_api_url):
+        """
+        We support 2 auth methods:
+        * dumb - no auth in fact, there are static dict of some demo data is passed around
+        * AWS OIDC/Cognito - when we have some client creds in the env variables
+        #     and are able to retrieve short-living JWT using them, and then use
+        #     the API using that JWT.
+
+        TODO: it's probably worth configuring it the same way like we do with channels
+        """
+        source_jrd = str(source_jrd)
+        if doc_api_url.startswith("http://"):
+            # local/demo setup
+            logger.info("For document API request to %s the dumb auth is used", doc_api_url)
+            return {
+                'Authorization': 'JWTBODY {}'.format(
+                    json.dumps({
+                        "sub": "documents-api",
+                        "party": "spider",
+                        "country": self.country.name,
+                    })
+                )
+            }
+        try:
+            # first we try to determine the oauth credentials for that
+            COGNITO_OAUTH_CREDENTIALS = {
+                "client_id": env_json("IGL_COUNTRY_OAUTH_CLIENT_ID")[source_jrd],
+                "client_secret": env_json("IGL_COUNTRY_OAUTH_CLIENT_SECRET")[source_jrd],
+                "scopes": env_json("IGL_COUNTRY_OAUTH_SCOPES")[source_jrd],
+                "wellknown_url": env_json("IGL_COUNTRY_OAUTH_WELLKNOWN_URL")[source_jrd],
+            }
+        except (KeyError, TypeError) as e:
+            # It seems that we don't have it configured - so use the demo auth
+            logger.info("We don't have the only supported real auth method configured (%s)", str(e))
+            COGNITO_OAUTH_CREDENTIALS = {}
+        if COGNITO_OAUTH_CREDENTIALS:
+            logger.info("Will try to retrieve JWT for %s", doc_api_url)
+            # good, may be we try to request some JWT?
+            return self._get_auth_headers(
+                auth_method="Cognito/JWT",
+                # auth well known urls and other configuration
+                auth_parameters=COGNITO_OAUTH_CREDENTIALS
+            )
+        return {}
+
     def _download_remote_obj(self, sender, multihash):
         logger.info("Downloading %s from %s as %s", multihash, sender, self.country)
         remote_doc_api_url = sender.object_api_base_url()
@@ -91,15 +138,7 @@ class RetrieveAndStoreForeignDocumentsUseCase:
                 "as_country": self.country.name,
             },
             # TODO: cognito JWT and other auth methods
-            headers={
-                'Authorization': 'JWTBODY {}'.format(
-                    json.dumps({
-                        "sub": "documents-api",
-                        "party": "spider",
-                        "country": self.country.name,
-                    })
-                )
-            }
+            headers=self._get_docapi_auth_headers(sender, remote_doc_api_url)
         )
         logger.info("GET %s: status %s", url, doc_resp.status_code)
         # TODO: we should process various response codes differently:
