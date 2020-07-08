@@ -17,7 +17,7 @@ class SubscriptionHandler:
 
     def __init__(self):
         self.last_subscribed_at = None
-        self.subscription_period = datetime.timedelta(days=1)
+        self.subscription_period = datetime.timedelta(minutes=60)
 
     def run(self):
         for channel in get_channels_for_local_jurisdiction(env.ROUTING_TABLE, env.COUNTRY):
@@ -29,7 +29,7 @@ class SubscriptionHandler:
 
     def should_update_subscription(self):
         now = datetime.datetime.utcnow()
-        return not (self.last_subscribed_at and now - self.last_subscribed_at < self.subscription_period)
+        return not (self.last_subscribed_at and (now - self.last_subscribed_at < self.subscription_period / 2))
 
     def subscribe(self, channel):
         channel_url = self.get_channel_subscribe_endpoint_url(channel)
