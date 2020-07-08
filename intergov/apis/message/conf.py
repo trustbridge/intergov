@@ -1,4 +1,4 @@
-from intergov.conf import env_s3_config, env_bool, env_queue_config
+from intergov.conf import env, env_s3_config, env_bool, env_queue_config
 
 
 class Config(object):
@@ -12,8 +12,11 @@ class Config(object):
 
     PUBLISH_NOTIFICATIONS_REPO_CONN = env_queue_config('MSG_RX_API_OUTBOX_REPO')
 
+    SENTRY_DSN = env("SENTRY_DSN", default=None)
+
 
 class TestConfig(Config):
     # Use separate conf object only for tests
     DEBUG = True
     TESTING = True
+    SENTRY_DSN = None

@@ -21,6 +21,11 @@ def create_app(config_object=None):
     app = Flask(__name__)
     app.request_class = BigMemoryRequest
     app.config.from_object(config_object)
+    SENTRY_DSN = app.config.get("SENTRY_DSN")
+    if SENTRY_DSN:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        sentry_sdk.init(SENTRY_DSN, integrations=[FlaskIntegration()])
     app.register_blueprint(index.blueprint)
     app.register_blueprint(documents.blueprint)
     handlers.register(app)
