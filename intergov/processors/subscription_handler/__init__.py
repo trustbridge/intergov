@@ -23,9 +23,11 @@ class SubscriptionHandler:
         for channel in get_channels_for_local_jurisdiction(env.ROUTING_TABLE, env.COUNTRY):
             if self.should_update_subscription():
                 logger.info("Subscribing for channel..., %r", channel["Name"])
-                self.subscribe(channel)
-            # else:
-            #     logger.info("Subscription should not be updated, sleeping...")
+                try:
+                    self.subscribe(channel)
+                except Exception as e:
+                    logger.exception(e)
+                    raise
 
     def should_update_subscription(self):
         now = datetime.datetime.utcnow()

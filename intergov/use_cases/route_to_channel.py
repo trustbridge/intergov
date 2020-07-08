@@ -40,6 +40,8 @@ class RouteToChannelUseCase:
         # we return message ID if at least one channel accepted the message and False otherwise
         result = False
 
+        if not self.ROUTING_TABLE:
+            logger.warning("Empty routing table provided!")
         for routing_rule in self.ROUTING_TABLE:
             # for all channels we find one which could accept that message
             # based on receiver

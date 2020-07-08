@@ -29,6 +29,10 @@ def channel_message_confirm(channel_id):
     # TODO: validate signature header
     channel = get_channel_by_id(channel_id, Config.ROUTING_TABLE)
     if not channel:
+        logger.warning(
+            "Trying to confirm subscription for a wrong channel %s (%s)",
+            channel_id, Config.ROUTING_TABLE
+        )
         return Response("Bad channel_id", status=400)
     return Response(request.args.get('hub.challenge'))
 
