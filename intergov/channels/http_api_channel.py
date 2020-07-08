@@ -144,7 +144,7 @@ class HttpApiChannel:
 
         if not OAUTH_CLIENT_ID or not OAUTH_CLIENT_SECRET:
             raise Exception(
-                "Improperly configured: useing Congito/JWT auth "
+                "Improperly configured: Using Cognito/JWT auth "
                 "without any way to retrieve the token"
             )
 
