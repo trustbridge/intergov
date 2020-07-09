@@ -84,8 +84,11 @@ class ProcessChannelNotificationUseCase(ChannelNotificationUseCase):
             if attempt < self.MAX_ATTEMPTS:
                 attempt += 1
                 EnqueueChannelNotificationUseCase(self.channel_notification_repo).retry(job_payload, attempt)
+                self.channel_notification_repo.delete(queue_message_id)
                 return
             raise
+        else:
+            self.channel_notification_repo.delete(queue_message_id)
 
     def process(self, job_payload):
         logger.debug("Processing job: %r", job_payload)
