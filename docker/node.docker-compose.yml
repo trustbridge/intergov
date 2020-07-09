@@ -241,14 +241,6 @@ services:
     command: bash -c "cd /src & sleep 10 &&
       python intergov/processors/channel_message_retriever/__init__.py"
 
-  # may not be needed after channels support subscriptions
-  channel_poller:
-    <<: *base_service
-    container_name: ${COMPOSE_PROJECT_NAME}_ig_channel_poller
-    restart: on-failure
-    command: bash -c "cd /src & sleep 3 &&
-      python intergov/processors/channel_poller/__init__.py"
-
   message_updater:
     <<: *base_service
     container_name: ${COMPOSE_PROJECT_NAME}_ig_message_updater

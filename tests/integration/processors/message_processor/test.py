@@ -1,4 +1,4 @@
-from intergov.conf import env_s3_config, env_queue_config, env_postgres_config
+from intergov.conf import env, env_s3_config, env_queue_config, env_postgres_config
 from intergov.repos.bc_inbox.elasticmq.elasticmqrepo import BCInboxRepo
 from intergov.repos.api_outbox import ApiOutboxRepo
 from intergov.repos.message_lake import MessageLakeRepo
@@ -18,6 +18,8 @@ OBJECT_RETRIEVAL_REPO_CONF = env_queue_config('TEST_2')
 NOTIFICATIONS_REPO_CONF = env_queue_config('TEST_3')
 
 BLOCKCHAIN_OUTBOX_REPO_CONF = env_postgres_config('TEST')
+
+OUR_JRD = env("IGL_COUNTRY", default="AU")
 
 
 def test():
@@ -95,7 +97,7 @@ def test():
     # this one should go to blockchain outbox
     status = 'pending'
     message = _generate_msg_object(sender_ref=sender_ref, status=status)
-    message.sender = 'AU'
+    message.sender = OUR_JRD
     message.receiver = 'CN'
 
     assert bc_inbox_repo.post(message)
