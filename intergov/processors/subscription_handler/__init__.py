@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 
 from intergov.loggers import logging
 from intergov.processors.common import env
-from intergov.processors.common.utils import get_channels_for_local_jurisdiction
+from intergov.processors.common.utils import get_channels_to_subscribe_as
 from intergov.use_cases.request_channel_api import (
     RequestChannelAPIUseCase, SubscriptionFailure, InvalidSubscriptionParameters
 )
@@ -20,14 +20,13 @@ class SubscriptionHandler:
         self.subscription_period = datetime.timedelta(minutes=60)
 
     def run(self):
-        for channel in get_channels_for_local_jurisdiction(env.ROUTING_TABLE, env.COUNTRY):
+        for channel in get_channels_to_subscribe_as(env.ROUTING_TABLE, env.COUNTRY):
             if self.should_update_subscription():
-                logger.info("Subscribing for channel..., %r", channel["Name"])
+                logger.info("Subscribing to channel %s", channel["Name"])
                 try:
                     self.subscribe(channel)
                 except Exception as e:
-                    logger.exception(e)
-                    raise
+                    logger.error("Unable to subscribe to channel %s - %s", channel, str(e))
 
     def should_update_subscription(self):
         now = datetime.datetime.utcnow()
@@ -56,9 +55,7 @@ class SubscriptionHandler:
 
 if __name__ == '__main__':
     processor = SubscriptionHandler()
-    sleep_period = 30  # will be increased
+    sleep_period = 30
     while True:
         processor.run()
         sleep(sleep_period)
-        if sleep_period < 60 * 5:
-            sleep_period += 10  # we slowly increate this timeout

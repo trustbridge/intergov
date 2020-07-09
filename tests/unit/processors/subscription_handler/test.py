@@ -56,7 +56,7 @@ class TestSubscriptionHandler:
         expected_body = urlencode(
             {
                 'hub.mode': 'subscribe',
-                'hub.callback': 'http://mock_message_rx_api/channel-message/1',
+                'hub.callback': 'http://mock_message_rx_api/channel-message/2',
                 'hub.topic': 'AU',
                 'hub.secret': '',
             })

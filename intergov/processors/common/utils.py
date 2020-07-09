@@ -15,5 +15,6 @@ def get_message_patch_api_endpoint_auth_params():
         }
 
 
-def get_channels_for_local_jurisdiction(routing_table, country):
-    return [c for c in routing_table if c['Jurisdiction'] == country]
+def get_channels_to_subscribe_as(routing_table, country):
+    # just skip the self channel configuration
+    return [c for c in routing_table if c['Jurisdiction'] != country]
