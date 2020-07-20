@@ -36,7 +36,7 @@ def test_callback_delivery():
     delivery_outbox_repo = DeliveryOutboxRepo(DELIVERY_OUTBOX_REPO_CONF)
     use_case = DeliverCallbackUseCase(delivery_outbox_repo)
     # clearing test queue
-    delivery_outbox_repo._unsafe_clear_for_test()
+    delivery_outbox_repo._unsafe_method__clear()
     assert not delivery_outbox_repo.get()
     processor = Processor(use_case=use_case)
     # testing that iter returns processor

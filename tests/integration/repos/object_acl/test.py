@@ -10,8 +10,8 @@ CONF = env_s3_config('TEST')
 
 def test():
     repo = ObjectACLRepo(CONF)
-    repo._unsafe_clear_for_test()
-    assert repo._unsafe_is_empty_for_test()
+    repo._unsafe_method__clear()
+    assert repo.is_empty()
 
     message = _generate_msg_object()
     obj = str(message.obj)

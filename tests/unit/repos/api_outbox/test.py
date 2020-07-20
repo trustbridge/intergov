@@ -199,20 +199,16 @@ def test_search(sessionmaker, create_engine):
     assert len(repo.search()) == 1
 
 
-@mock.patch('intergov.repos.api_outbox.postgresrepo.IGL_ALLOW_UNSAFE_REPO_CLEAR', False)
-@mock.patch('intergov.repos.api_outbox.postgresrepo.IGL_ALLOW_UNSAFE_REPO_IS_EMPTY', False)
+@mock.patch('intergov.repos.api_outbox.postgresrepo.TESTING', False)
 @mock.patch('intergov.repos.api_outbox.postgresrepo.create_engine')
 @mock.patch('intergov.repos.api_outbox.postgresrepo.sessionmaker')
 def test_unsafe_not_allowed(sessionmaker, create_engine):
     repo = PostgresRepo(CONNECTION_DATA)
     with pytest.raises(RuntimeError):
-        repo._unsafe_clear_for_test()
-    with pytest.raises(RuntimeError):
-        repo._unsafe_is_empty_for_test()
+        repo._unsafe_method__clear()
 
 
-@mock.patch('intergov.repos.api_outbox.postgresrepo.IGL_ALLOW_UNSAFE_REPO_CLEAR', True)
-@mock.patch('intergov.repos.api_outbox.postgresrepo.IGL_ALLOW_UNSAFE_REPO_IS_EMPTY', True)
+@mock.patch('intergov.repos.api_outbox.postgresrepo.TESTING', True)
 @mock.patch('intergov.repos.api_outbox.postgresrepo.create_engine')
 @mock.patch('intergov.repos.api_outbox.postgresrepo.sessionmaker')
 def test_unsafe(sessionmaker, create_engine):
@@ -222,23 +218,23 @@ def test_unsafe(sessionmaker, create_engine):
     session.query.return_value = query
     repo = PostgresRepo(CONNECTION_DATA)
 
-    repo._unsafe_clear_for_test()
+    repo._unsafe_method__clear()
     query.delete.assert_called_once()
     session.commit.assert_called_once()
     sessionmaker.reset_mock()
 
     query.delete.side_effect = Exception()
-    repo._unsafe_clear_for_test()
+    repo._unsafe_method__clear()
     session.close.assert_called_once()
     query.delete.assert_called_once()
     sessionmaker.reset_mock()
 
-    assert repo._unsafe_is_empty_for_test()
+    assert repo.is_empty()
     query.count.return_value = 10
-    assert not repo._unsafe_is_empty_for_test()
+    assert not repo.is_empty()
     sessionmaker.reset_mock()
 
     query.count.side_effect = Exception()
-    repo._unsafe_is_empty_for_test()
+    repo.is_empty()
     query.count.assert_called_once()
     session.close.assert_called_once()

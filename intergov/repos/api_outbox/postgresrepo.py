@@ -1,16 +1,12 @@
+from libtrustbridge.utils.conf import TESTING
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
 
-from intergov.conf import env_bool
 from intergov.domain.wire_protocols import generic_discrete as message
-from intergov.repos.api_outbox.postgres_objects import Base, Message
 from intergov.loggers import logging
+from intergov.repos.api_outbox.postgres_objects import Base, Message
 
 logger = logging.getLogger(__name__)
-
-
-IGL_ALLOW_UNSAFE_REPO_CLEAR = env_bool('IGL_ALLOW_UNSAFE_REPO_CLEAR', default=False)
-IGL_ALLOW_UNSAFE_REPO_IS_EMPTY = env_bool('IGL_ALLOW_UNSAFE_REPO_IS_EMPTY', default=False)
 
 
 class PostgresRepo:
@@ -206,10 +202,10 @@ class PostgresRepo:
 
     # primarily for testing purposes
     # do not use in production code
-    def _unsafe_clear_for_test(self):
-        if not IGL_ALLOW_UNSAFE_REPO_CLEAR:
+    def _unsafe_method__clear(self):
+        if not TESTING:
             raise RuntimeError(
-                'repo._unsafe_clear_for_test method allowed only when env IGL_ALLOW_UNSAFE_REPO_CLEAR=True'
+                'repo._unsafe_method__clear method allowed only when env TESTING=True'
             )
         DBSession = sessionmaker(bind=self.engine)
         session = DBSession()
@@ -222,11 +218,7 @@ class PostgresRepo:
         finally:
             session.close()
 
-    def _unsafe_is_empty_for_test(self):
-        if not IGL_ALLOW_UNSAFE_REPO_IS_EMPTY:
-            raise RuntimeError(
-                'repo._unsafe_is_empty_for_test method allowed only when env IGL_ALLOW_UNSAFE_REPO_IS_EMPTY=True'
-            )
+    def is_empty(self):
         DBSession = sessionmaker(bind=self.engine)
         session = DBSession()
         count = None

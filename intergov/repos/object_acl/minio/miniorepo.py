@@ -1,9 +1,10 @@
 import json
 
+from libtrustbridge.repos import miniorepo
+
 from intergov.domain.country import Country
 from intergov.loggers import logging  # NOQA
 from intergov.serializers import generic_discrete_message as ser
-from intergov.repos.base.minio import miniorepo
 
 
 class ObjectACLRepo(miniorepo.MinioRepo):

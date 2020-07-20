@@ -1,7 +1,7 @@
-from intergov.repos.base.elasticmq import elasticmqrepo
+from libtrustbridge.repos.elasticmqrepo import ElasticMQRepo
 
 
-class ObjectRetrievalRepo(elasticmqrepo.ElasticMQRepo):
+class ObjectRetrievalRepo(ElasticMQRepo):
     """
     This repo is used to ask Documents Spider to download these objects
     When incoming message is received

@@ -12,8 +12,8 @@ CONF = env_s3_config('TEST')
 
 def test():
     repo = MessageLakeRepo(CONF)
-    repo._unsafe_clear_for_test()
-    assert repo._unsafe_is_empty_for_test()
+    repo._unsafe_method__clear()
+    assert repo.is_empty()
 
     message = _generate_msg_object(
         sender_ref='xxx-xxx-xxx', status=None,
@@ -35,8 +35,8 @@ def test():
     assert message_from_repo == message
 
     assert not repo.get('AU', 'aaaaa-bbbbb-ccccc')
-    repo._unsafe_clear_for_test()
-    assert repo._unsafe_is_empty_for_test()
+    repo._unsafe_method__clear()
+    assert repo.is_empty()
 
     repo.put_message_related_object(
         sender=sender,

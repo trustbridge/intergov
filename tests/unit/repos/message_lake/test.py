@@ -1,9 +1,19 @@
 import json
 from unittest import mock
 import pytest
+
 from intergov.repos.message_lake.minio.miniorepo import MessageLakeMinioRepo
-from tests.unit.repos.base.minio.test import CONNECTION_DATA
 from tests.unit.domain.wire_protocols.test_generic_message import _generate_msg_object
+
+
+CONNECTION_DATA = {
+    'host': 'minio.host',
+    'port': 1000,
+    'access_key': 'access_key',
+    'secret_key': 'secret_key',
+    'bucket': 'bucket',
+    'use_ssl': False
+}
 
 
 @mock.patch('intergov.repos.message_lake.minio.miniorepo.miniorepo.boto3')

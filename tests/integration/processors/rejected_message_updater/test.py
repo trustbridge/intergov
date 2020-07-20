@@ -32,8 +32,8 @@ def test(docker_setup):
     rejected_message_repo = RejectedMessagesRepo(REJECTED_MESSAGES_REPO_CONF)
 
     # ensuring that repos are empty
-    message_lake_repo._unsafe_clear_for_test()
-    rejected_message_repo._unsafe_clear_for_test()
+    message_lake_repo._unsafe_method__clear()
+    rejected_message_repo._unsafe_method__clear()
 
     updater = RejectedStatusUpdater(
         rejected_message_repo_conf=REJECTED_MESSAGES_REPO_CONF,

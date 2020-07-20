@@ -1,7 +1,5 @@
-# import hashlib
 import multihash
-
-from intergov.repos.base.minio import miniorepo
+from libtrustbridge.repos import miniorepo
 
 
 class ObjectLakeMinioRepo(miniorepo.MinioRepo):
