@@ -1,11 +1,11 @@
-from intergov.conf import env, env_s3_config, env_queue_config, env_postgres_config
-from intergov.repos.bc_inbox.elasticmq.elasticmqrepo import BCInboxRepo
+from intergov.conf import env_s3_config, env_queue_config, env_postgres_config, env
+from intergov.processors.message_processor import InboundMessageProcessor
 from intergov.repos.api_outbox import ApiOutboxRepo
+from intergov.repos.bc_inbox.elasticmq.elasticmqrepo import BCInboxRepo
 from intergov.repos.message_lake import MessageLakeRepo
+from intergov.repos.notifications import NotificationsRepo
 from intergov.repos.object_acl import ObjectACLRepo
 from intergov.repos.object_retrieval import ObjectRetrievalRepo
-from intergov.repos.notifications import NotificationsRepo
-from intergov.processors.message_processor import InboundMessageProcessor
 from tests.unit.domain.wire_protocols.test_generic_message import (
     _generate_msg_object
 )
@@ -23,7 +23,6 @@ OUR_JRD = env("IGL_COUNTRY", default="AU")
 
 
 def test():
-
     # creating testing versions of all required repos
     message_lake_repo = MessageLakeRepo(MESSAGE_LAKE_REPO_CONF)
     object_acl_repo = ObjectACLRepo(OBJECT_ACL_REPO_CONF)
@@ -36,24 +35,24 @@ def test():
 
     def clear():
         # clearing repos
-        message_lake_repo._unsafe_clear_for_test()
-        object_acl_repo._unsafe_clear_for_test()
+        message_lake_repo._unsafe_method__clear()
+        object_acl_repo._unsafe_method__clear()
 
-        bc_inbox_repo._unsafe_clear_for_test()
-        object_retrieval_repo._unsafe_clear_for_test()
-        notifications_repo._unsafe_clear_for_test()
+        bc_inbox_repo._unsafe_method__clear()
+        object_retrieval_repo._unsafe_method__clear()
+        notifications_repo._unsafe_method__clear()
 
-        blockchain_outbox_repo._unsafe_clear_for_test()
+        blockchain_outbox_repo._unsafe_method__clear()
 
         # test repos are empty
-        assert message_lake_repo._unsafe_is_empty_for_test()
-        assert object_acl_repo._unsafe_is_empty_for_test()
+        assert message_lake_repo.is_empty()
+        assert object_acl_repo.is_empty()
 
-        assert bc_inbox_repo._unsafe_is_empty_for_test()
-        assert object_retrieval_repo._unsafe_is_empty_for_test()
-        assert notifications_repo._unsafe_is_empty_for_test()
+        assert bc_inbox_repo.is_empty()
+        assert object_retrieval_repo.is_empty()
+        assert notifications_repo.is_empty()
 
-        assert blockchain_outbox_repo._unsafe_is_empty_for_test()
+        assert blockchain_outbox_repo.is_empty()
 
     clear()
 
@@ -82,14 +81,14 @@ def test():
     assert next(processor) is True
     assert next(processor) is None
     # testing that message is deleted
-    assert bc_inbox_repo._unsafe_is_empty_for_test()
+    assert bc_inbox_repo.is_empty()
     # testing message posted to related repos
-    assert not message_lake_repo._unsafe_is_empty_for_test()
-    assert not object_acl_repo._unsafe_is_empty_for_test()
+    assert not message_lake_repo.is_empty()
+    assert not object_acl_repo.is_empty()
     # we can't say it's empty because worker gets values from there
-    # assert not object_retrieval_repo._unsafe_is_empty_for_test()
+    # assert not object_retrieval_repo.is_empty()
     # received status should not be posted to blockchain
-    assert blockchain_outbox_repo._unsafe_is_empty_for_test()
+    assert blockchain_outbox_repo.is_empty()
 
     clear()
 
@@ -106,12 +105,10 @@ def test():
     assert next(processor) is True
     assert next(processor) is None
     # testing that message is deleted
-    assert bc_inbox_repo._unsafe_is_empty_for_test()
+    assert bc_inbox_repo.is_empty()
     # testing message posted to related repos
-    assert not message_lake_repo._unsafe_is_empty_for_test()
-    assert not object_acl_repo._unsafe_is_empty_for_test()
-    # assert not object_retrieval_repo._unsafe_is_empty_for_test()
-    # assert not blockchain_outbox_repo._unsafe_is_empty_for_test()
+    assert not message_lake_repo.is_empty()
+    assert not object_acl_repo.is_empty()
 
     clear()
 

@@ -46,7 +46,7 @@ def _fill_subscriptions_repo(repo, subscriptions):
         for i in range(number):
             print(f"subcribe predicate:{predicate}, url:{url.format(i)}")
             repo.subscribe_by_pattern(Pattern(predicate), url.format(i), DEFAULT_EXPIRATION)
-    assert not repo._unsafe_is_empty_for_test()
+    assert not repo.is_empty()
 
 
 def _is_predicate_in_url(url, predicate):
@@ -60,13 +60,13 @@ def test():
     notifications_repo = repos.NotificationsRepo(NOTIFICATIONS_REPO_CONF)
     subscriptions_repo = repos.SubscriptionsRepo(SUBSCRIPTIONS_REPO_CONF)
 
-    delivery_outbox_repo._unsafe_clear_for_test()
-    notifications_repo._unsafe_clear_for_test()
-    subscriptions_repo._unsafe_clear_for_test()
+    delivery_outbox_repo._unsafe_method__clear()
+    notifications_repo._unsafe_method__clear()
+    subscriptions_repo._unsafe_method__clear()
 
-    assert notifications_repo._unsafe_is_empty_for_test()
-    assert delivery_outbox_repo._unsafe_is_empty_for_test()
-    assert subscriptions_repo._unsafe_is_empty_for_test()
+    assert notifications_repo.is_empty()
+    assert delivery_outbox_repo.is_empty()
+    assert subscriptions_repo.is_empty()
 
     use_case = DispatchMessageToSubscribersUseCase(notifications_repo, delivery_outbox_repo, subscriptions_repo)
     processor = Processor(use_case=use_case)

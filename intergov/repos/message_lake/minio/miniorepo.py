@@ -1,7 +1,8 @@
 import json
 from botocore.client import ClientError
+from libtrustbridge.repos import miniorepo
+
 from intergov.domain.wire_protocols import generic_discrete as message
-from intergov.repos.base.minio import miniorepo
 from intergov.serializers import generic_discrete_message as ser
 from intergov.loggers import logging  # NOQA
 

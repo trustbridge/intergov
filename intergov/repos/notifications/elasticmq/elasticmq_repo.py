@@ -1,4 +1,4 @@
-from intergov.repos.base.elasticmq import elasticmqrepo
+from libtrustbridge.repos import elasticmqrepo
 
 
 class NotificationsElasticmqRepo(elasticmqrepo.ElasticMQRepo):
