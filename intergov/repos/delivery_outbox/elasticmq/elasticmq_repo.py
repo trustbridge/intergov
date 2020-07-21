@@ -1,6 +1,6 @@
-from intergov.repos.base.elasticmq import elasticmqrepo
+from libtrustbridge.repos.elasticmqrepo import ElasticMQRepo
 
 
-class DeliveryOutboxRepo(elasticmqrepo.ElasticMQRepo):
+class DeliveryOutboxRepo(ElasticMQRepo):
     def _get_queue_name(self):
         return 'delivery-outbox'
