@@ -1,6 +1,6 @@
-from intergov.repos.base.elasticmq import elasticmqrepo
+from libtrustbridge.repos.elasticmqrepo import ElasticMQRepo
 
 
-class APIInboxElasticRepo(elasticmqrepo.ElasticMQRepo):
+class APIInboxElasticRepo(ElasticMQRepo):
     def _get_queue_name(self):
         return 'api-inbox'

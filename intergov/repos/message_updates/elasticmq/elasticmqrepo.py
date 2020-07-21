@@ -1,10 +1,10 @@
-from intergov.repos.base.elasticmq import elasticmqrepo
-
-"""
-This repo is used to delay message updates
-"""
+from libtrustbridge.repos.elasticmqrepo import ElasticMQRepo
 
 
-class MessageUpdatesElasticMQRepo(elasticmqrepo.ElasticMQRepo):
+class MessageUpdatesElasticMQRepo(ElasticMQRepo):
+    """
+    This repo is used to delay message updates
+    """
+
     def _get_queue_name(self):
         return 'message-updates'
