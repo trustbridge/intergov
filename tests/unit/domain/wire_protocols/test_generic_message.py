@@ -186,19 +186,6 @@ def test_validation_invalid_no_subject():
     assert not msg.is_valid()
 
 
-def test_validation_invalid_subject():
-    A, B, subject, obj, predicate = _generate_message_params()
-    for x in _generate_invalid_uri_list():
-        subject = x
-        msg = gd.Message(
-            sender=A,
-            receiver=B,
-            subject=subject,
-            obj=obj,
-            predicate=predicate)
-        assert not msg.is_valid()
-
-
 def test_validation_invalid_no_obj():
     A, B, subject, obj, predicate = _generate_message_params()
     msg = gd.Message(

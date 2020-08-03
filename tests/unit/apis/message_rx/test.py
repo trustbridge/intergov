@@ -107,7 +107,7 @@ def _test_post_message_validation_failed(
                     'spurious attr: spurious_attr',
                     'sender is not a country: None',
                     'receiver is not a country: None',
-                    'subject is not a URI: None',
+                    'subject is empty',
                     'obj is not a URI: None',
                     'predicate is not a URI: None'
                 ]

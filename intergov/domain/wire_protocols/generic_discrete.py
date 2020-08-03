@@ -97,9 +97,10 @@ def not_one_of_error(items):
 
 
 VALIDATION_FUNCTIONS = {
+    # Note that any required field must be present in that dict
     SENDER_KEY: (is_country, not_country_error),
     RECEIVER_KEY: (is_country, not_country_error),
-    SUBJECT_KEY: (is_URI, not_URI_error),
+    SUBJECT_KEY: (not_empty, empty_error),
     OBJ_KEY: (is_URI, not_URI_error),
     PREDICATE_KEY: (is_URI, not_URI_error),
     STATUS_KEY: (one_of(ALLOWED_STATUSES), not_one_of_error(ALLOWED_STATUSES)),
