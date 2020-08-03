@@ -50,7 +50,10 @@ class RequestChannelAPIUseCase:
         endpoint = self.CHANNEL_API_SUBSCRIBE_BY_JURISDICTION_ENDPOINT
         response = self.post(endpoint, data=params)
         if not response.status_code == 202:
-            raise SubscriptionFailure("Channel returned bad response, %r" % response.content)
+            logger.error(
+                "Non-202 response from a channel %s, %s", endpoint, str(response.content)
+            )
+            raise SubscriptionFailure("Non-202 response from a channel")
 
     def get(self, endpoint):
         url = self.get_url(endpoint)
