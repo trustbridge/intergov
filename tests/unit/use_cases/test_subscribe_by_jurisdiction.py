@@ -24,19 +24,19 @@ class TestSubscribeByJurisdiction:
 
     def test_use_case__with_missing_params__should_raise_exception(self):
         with pytest.raises(InvalidSubscriptionParameters):
-            self.use_case.subscribe_by_jurisdiction(callback_url='', country='something')
+            self.use_case.subscribe_by_jurisdiction(callback_url='', jurisdiction='something')
         with pytest.raises(InvalidSubscriptionParameters):
-            self.use_case.subscribe_by_jurisdiction(callback_url='something', country='')
+            self.use_case.subscribe_by_jurisdiction(callback_url='something', jurisdiction='')
 
     def test_use_case__when_channel_response_not_ok__should_raise_exception(self):
         self.mocked_responses.add(responses.POST, self.channel_api_url, status=400)
         with pytest.raises(SubscriptionFailure):
-            response = self.use_case.subscribe_by_jurisdiction(callback_url='https://callback.url', country='AU', secret='123')
+            response = self.use_case.subscribe_by_jurisdiction(callback_url='https://callback.url', jurisdiction='AU', secret='123')
             response.raise_for_status()
 
     def test_use_case__happy_path(self):
         self.mocked_responses.add(responses.POST, self.channel_api_url, status=202)
-        self.use_case.subscribe_by_jurisdiction(callback_url='https://callback.url', country='AU', secret='123')
+        self.use_case.subscribe_by_jurisdiction(callback_url='https://callback.url', jurisdiction='AU', secret='123')
 
         body = ('hub.mode=subscribe&'
                 'hub.callback=https%3A%2F%2Fcallback.url&'

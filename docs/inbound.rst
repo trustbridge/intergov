@@ -13,7 +13,7 @@ There is one of these workers for each distinct channel.
 
 They are like listening posts.
 They observe every message on the channel,
-filter out the ones that originate from this country,
+filter out the ones that originate from this jurisdiction,
 and send the rest to the Private Message API for processing.
 
 This way the rest of the system can know about new messages,
@@ -55,7 +55,7 @@ and does not need to know about the configuration of channels.
 Private Message API
 -------------------
 
-When a message is sent by another country to this one,
+When a message is sent by another jurisdiction to this one,
 the Channel Observer component
 associated with that channel
 uses this private API to process the mesaages.

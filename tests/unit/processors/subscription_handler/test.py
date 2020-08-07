@@ -15,7 +15,7 @@ class TestSubscriptionHandler:
         with mock.patch('intergov.processors.subscription_handler.env') as mocked_env:
             self.env = mocked_env
             self.env.MESSAGE_RX_API_URL = 'http://mock_message_rx_api'
-            self.env.COUNTRY = 'AU'
+            self.env.JURISDICTION = 'AU'
             self.channel_subscribe_url = "https://sharedchannel.services.devnet.trustbridge.io/messages/subscriptions/by_jurisdiction"
             self.env.ROUTING_TABLE = [
                 {

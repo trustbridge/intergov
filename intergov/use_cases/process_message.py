@@ -1,6 +1,5 @@
 import os
 
-from intergov.conf import env
 from intergov.domain.wire_protocols.generic_discrete import Message
 from intergov.loggers import logging  # NOQA
 from intergov.monitoring import statsd_timer
@@ -19,7 +18,7 @@ class ProcessMessageUseCase:
     Gets one message from the channel inbox
     and does number of things with it.
 
-    * dispatch document retreval job
+    * dispatch document retrieval job
       (if the message is from a foreign source)
     * dispatch message sending task to channel-outbox
       (if the message is from a domestic source)
@@ -30,24 +29,24 @@ class ProcessMessageUseCase:
 
     Note: the inbound message may have come from
     one of two sources: it may be a message from within
-    this country, or it may be a message sent from another country.
+    this jurisdiction, or it may be a message sent from another jurisdiction.
     This use-case works with either message,
-    however it needs to know which country it is working as
+    however it needs to know which jurisdiction it is working as
     to get the logic right
-    (that is why it takes a country parameter
+    (that is why it takes a jurisdiction parameter
     when it is instantiated).
     """
 
     def __init__(
             self,
-            country,
+            jurisdiction,
             bc_inbox_repo,
             message_lake_repo,
             object_acl_repo,
             object_retreval_repo,
-            notifications_repo,  # TODO: rename to notifications_repo
+            notifications_repo,
             blockchain_outbox_repo):
-        self.country = country
+        self.jurisdiction = jurisdiction
         self.bc_inbox_repo = bc_inbox_repo
         self.message_lake_repo = message_lake_repo
         self.object_acl_repo = object_acl_repo
@@ -108,7 +107,7 @@ class ProcessMessageUseCase:
         # so it can be shared to the foreign parties
         outbox_OK = True
         ret_OK = True
-        if str(message.sender) == str(self.country) and message.status == 'pending':
+        if str(message.sender) == str(self.jurisdiction) and message.status == 'pending':
             # our jurisdiction -> remote
             logger.info("Sending message to the channels: %s", message.subject)
             try:
@@ -116,7 +115,7 @@ class ProcessMessageUseCase:
             except Exception as e:
                 logger.exception(e)
                 outbox_OK = False
-        elif str(message.sender) != str(self.country) and message.status == 'received':
+        elif str(message.sender) != str(self.jurisdiction) and message.status == 'received':
             # Incoming message from remote juridsiction
             # might need to download remote documents using the
             # Documents Spider
@@ -142,7 +141,7 @@ class ProcessMessageUseCase:
             logger.warning(
                 "Message sender is %s and we are %s and the status is %s - strange",
                 message.sender,
-                self.country,
+                self.jurisdiction,
                 message.status
             )
             return False

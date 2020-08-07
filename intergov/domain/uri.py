@@ -107,7 +107,7 @@ class URI:
 
         Note: in some scenarios, this could be
         a very interesting URI type.
-        If countries have a way to resolve document repositories,
+        If jurisdictions have a way to resolve document repositories,
         and if the resources are unchanging,
         then multihash identifiers have
         the interesting proof characteristics.

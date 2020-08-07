@@ -5,9 +5,9 @@ from intergov.apis.common.errors import (
 )
 
 
-class BadCountryNameError(ValidationError):
+class BadJurisdictionNameError(ValidationError):
 
-    detail = 'Received invalid/unknown country name'
+    detail = 'Received invalid/unknown jurisdiction name'
 
     @property
     def source(self):
@@ -43,16 +43,16 @@ class InvalidURIError(ValidationError):
     detail = 'URI is not multihash'
 
 
-def DocumentNotFoundError(uri, country):
+def DocumentNotFoundError(uri, jurisdiction):
     return GenericHTTPError(
         HTTPStatus.NOT_FOUND,
-        detail='Document with uri:{} for country:{} not found'.format(
-            uri, country
+        detail='Document with uri:{} for jurisdiction:{} not found'.format(
+            uri, jurisdiction
         ),
         source=[
             {
                 'uri': uri,
-                'country': str(country)
+                'jurisdiction': str(jurisdiction)
             }
         ]
     )

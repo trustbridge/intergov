@@ -57,7 +57,7 @@ class InboundMessageProcessor(object):
 
     def _prepare_use_cases(self):
         self.uc = ProcessMessageUseCase(
-            country=env('IGL_COUNTRY', default='AU'),
+            jurisdiction=env('IGL_JURISDICTION', default='AU'),
             bc_inbox_repo=self.bc_inbox_repo,
             message_lake_repo=self.message_lake_repo,
             object_acl_repo=self.object_acl_repo,

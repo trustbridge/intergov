@@ -2,7 +2,6 @@ import pytest
 from unittest import mock
 
 from intergov.domain.wire_protocols import generic_discrete as protocol
-# from intergov.domain.country import Country
 from intergov.use_cases import ProcessMessageUseCase
 from tests.unit.domain.wire_protocols import test_generic_message as test_protocol
 

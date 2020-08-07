@@ -3,16 +3,16 @@ import pycountry
 from .conf import Config
 
 
-class Country:
+class Jurisdiction:
     """
-    Helper class representing a country, with validations
+    Helper class representing a jurisdiction, with validations
     and extra parameters like readable name.
 
     Usage:
 
-        from intergov.domain.country import Country
-        c = Country("US")
-        c.object_api_base_url()
+        from intergov.domain.jurisdiction import Jurisdiction
+        j = Jurisdiction("US")
+        j.object_api_base_url()
     """
 
     def __init__(self, name):
@@ -22,7 +22,7 @@ class Country:
             raise TypeError("Please use short 2-characters uppercase country name", name)
         self.country_object = pycountry.countries.get(alpha_2=name)
         if not self.country_object:
-            raise ValueError("Unknown country name", name)
+            raise ValueError("Unknown jurisdiction name", name)
         self.name = name
 
     def __str__(self):
@@ -32,7 +32,7 @@ class Country:
         return f"{self.__class__.__name__}:{self.name}"
 
     def __eq__(self, other):
-        if not isinstance(other, Country):
+        if not isinstance(other, Jurisdiction):
             return False
         return self.name == other.name
 

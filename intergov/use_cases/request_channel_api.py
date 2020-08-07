@@ -38,13 +38,13 @@ class RequestChannelAPIUseCase:
             raise ChannelApiFailure("Could not get message from Channel API, response:%s" % response)
         return response.json()
 
-    def subscribe_by_jurisdiction(self, callback_url, country, secret=''):
-        if not (callback_url and country):
+    def subscribe_by_jurisdiction(self, callback_url, jurisdiction, secret=''):
+        if not (callback_url and jurisdiction):
             raise InvalidSubscriptionParameters
         params = {
             'hub.mode': 'subscribe',
             'hub.callback': callback_url,
-            'hub.topic': country,
+            'hub.topic': jurisdiction,
             'hub.secret': secret
         }
         endpoint = self.CHANNEL_API_SUBSCRIBE_BY_JURISDICTION_ENDPOINT

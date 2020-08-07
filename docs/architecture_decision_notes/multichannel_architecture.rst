@@ -59,7 +59,7 @@ that all messages pass through.
 This logical Hub could be a distributed ledger,
 traditional database, paper clearinghouse,
 so some other technology.
-The basic idea is that countries
+The basic idea is that jurisdictions
 send their messages to this hub
 and receive their messages from it too.
 
@@ -163,13 +163,13 @@ The above illustration shows a multi-channel scenario where:
 
 * Country A and Country E have a bilateral arrangement for exchanging messages on any topic
 * There is a multilateral arrangement
-  between Countries B, E and F
+  between Jurisdictions B, E and F
   that supports messages on any topic
 * There is a multilateral arrangement
-  between Countries A, B, C, F and G
+  between Jurisdictions A, B, C, F and G
   that supports messages on a specific topic
 * There is a multilateral arrangement
-  between Countries B, C, D, F, G and others (...)
+  between Jurisdictions B, C, D, F, G and others (...)
   that supports messages on any topic
 * There is an arrangement between Country D and others
   supporting messages on some specific topic.
@@ -186,7 +186,7 @@ why a multi-channel architecture is necessary.
 Support for Variable Topology
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Agreements between Countries are inherently bespoke.
+Agreements between Jurisdictions are inherently bespoke.
 Some are bilateral (links),
 others are multilateral (networks).
 The scope and details are customised
@@ -197,7 +197,7 @@ and new arrangements are made.
 
 Even if a hub model is theoretically better
 (no such theory is offered here),
-the idea of asking almost 200 countries
+the idea of asking almost 200 jurisdictions
 to agree on a precise scope and details
 for sharing cross-border trade documents
 seems like it would be slow,
@@ -214,7 +214,7 @@ will involve a similar process of negotiation
 to other international agreements.
 
 While technical standardisation may reduce waste,
-free countries will always ultimately determine
+free jurisdictions will always ultimately determine
 who they share what with, when and how;
 and those arrangements will change over time
 with policy and circumstance.
@@ -252,7 +252,7 @@ a universal "best technology"
 to implement cross-border trade document sharing,
 that would be a fleeting anomaly.
 
-Any design that does not allow countries
+Any design that does not allow jurisdictions
 to negotiate technology choices
 (and mutually agree to update or upgrade technology)
 seems incongruent with
@@ -271,7 +271,7 @@ Support for Variable Protocols
 The current proof of concept
 supports a wire protocol that
 we called "Discrete Generic Message" (DGM).
-Each communication packet between countries
+Each communication packet between jurisdictions
 contains a single ("discrete") message,
 and there is no limit to
 the taxonomy of message types
@@ -330,8 +330,8 @@ could be very difficult or perhaps impossible.
 The strategy of allowing multiple channels
 might make the solution seem more complicated
 from some perspectives,
-but if countries can route messages over multiple channels
-then it should be possible for a country
+but if jurisdictions can route messages over multiple channels
+then it should be possible for a jurisdiction
 to maintain integration with the collection of channels
 that best fit their needs.
 

@@ -18,7 +18,7 @@ if SENTRY_DSN:  # pragma: no cover
 
     with sentry_sdk.configure_scope() as scope:
         scope.set_tag("service", "intergov")
-        scope.set_tag("country", env("ICL_APP_COUNTRY", default=""))
+        scope.set_tag("jurisdiction", env("IGL_APP_JURISDICTION", default=""))
 
 LOGGING = {
     'version': 1,
@@ -55,7 +55,7 @@ LOGGING = {
 }
 
 # JSON formatter for sending logs to ES
-LOG_FORMATTER_JSON = env_bool('ICL_LOG_FORMATTER_JSON', default=False)
+LOG_FORMATTER_JSON = env_bool('IGL_LOG_FORMATTER_JSON', default=False)
 if LOG_FORMATTER_JSON:  # pragma: no cover
     LOGGING['formatters']['json'] = {
         '()': 'intergov.json_log_formatter.JsonFormatter',

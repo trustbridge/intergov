@@ -20,7 +20,7 @@ class SubscriptionHandler:
         self.subscription_period = datetime.timedelta(minutes=60)
 
     def run(self):
-        for channel in get_channels_to_subscribe_as(env.ROUTING_TABLE, env.COUNTRY):
+        for channel in get_channels_to_subscribe_as(env.ROUTING_TABLE, env.JURISDICTION):
             if self.should_update_subscription():
                 logger.info("Subscribing to channel %s", channel["Name"])
                 try:
@@ -38,7 +38,7 @@ class SubscriptionHandler:
         try:
             callback_url = self.get_callback_url(channel)
             logger.info('Sending subscription request to %s', channel_url)
-            RequestChannelAPIUseCase(channel).subscribe_by_jurisdiction(callback_url, env.COUNTRY)
+            RequestChannelAPIUseCase(channel).subscribe_by_jurisdiction(callback_url, env.JURISDICTION)
         except (SubscriptionFailure, InvalidSubscriptionParameters) as e:
             logger.error(e)
         else:

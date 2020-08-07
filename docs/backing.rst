@@ -102,4 +102,4 @@ of any implementation (backing service).
 This intent of this technical detail
 is to simplify the implementation of backing services
 using whatever technology is most appropriate
-for the country operating the ICL node.
+for the jurisdiction operating the IGL node.

@@ -7,7 +7,7 @@ to get the message by reference ID or post message to API inbox.
 Typical users will be exporter app, importer app and so on.
 
 Standard auth is required (actor should be entitled to view the message or send it
-from given country/etc).
+from given jurisdiction/etc).
 
 Don't confuse it with message_rx_api, which is just another abstraction layer. This
 one is a real API with auth, GET/POST endpoints and so on.

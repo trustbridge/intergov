@@ -2,7 +2,7 @@ from unittest import mock
 from intergov.processors.obj_spider import ObjectSpider
 
 
-@mock.patch('intergov.processors.obj_spider.Country')
+@mock.patch('intergov.processors.obj_spider.Jurisdiction')
 @mock.patch('intergov.processors.obj_spider.ObjectACLRepo')
 @mock.patch('intergov.processors.obj_spider.ObjectRetrievalRepo')
 @mock.patch('intergov.processors.obj_spider.ObjectLakeRepo')
@@ -12,7 +12,7 @@ def test(
     ObjectLakeRepo,
     ObjectRetrievalRepo,
     ObjectACLRepo,
-    Country
+    Jurisdiction
 ):
     spider = ObjectSpider()
     for Repo in [
@@ -22,7 +22,7 @@ def test(
     ]:
         Repo.assert_called_once()
     RetrieveAndStoreForeignDocumentsUseCase.assert_called_once_with(
-        country=Country.return_value,
+        jurisdiction=Jurisdiction.return_value,
         object_lake_repo=ObjectLakeRepo.return_value,
         object_acl_repo=ObjectACLRepo.return_value,
         object_retrieval_repo=ObjectRetrievalRepo.return_value

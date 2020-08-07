@@ -13,7 +13,7 @@ class StoreObjectUseCase:
 
     * calculates multihash
     * tries to save this object to ACL and lake repos, using multihash as filename
-    * adds receiving country to the list of recipients able to use document
+    * adds receiving jurisdiction to the list of recipients able to use document
       API to retrieve the object
     * returns multihash on success or raises an exceptions if something is wrong
     """
@@ -37,7 +37,7 @@ class StoreObjectUseCase:
         ))
 
     @statsd_timer("usecase.StoreObjectUseCase.execute")
-    def execute(self, fname=None, fobj=None, target_country=None):
+    def execute(self, fname=None, fobj=None, target_jurisdiction=None):
         """
         If fname is received then saves object at given path
         If fboj is provided (file-like object) then saves it.
@@ -51,7 +51,7 @@ class StoreObjectUseCase:
 
         self.object_acl.allow_access_to(
             multihash,
-            target_country.name
+            target_jurisdiction.name
         )
 
         # assuming it will raise errors if any

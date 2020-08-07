@@ -6,7 +6,7 @@ import requests
 
 from intergov.apis.common.interapi_auth import AuthMixin
 from intergov.conf import env_json
-from intergov.domain.country import Country
+from intergov.domain.jurisdiction import Jurisdiction
 from intergov.loggers import logging
 from intergov.monitoring import statsd_timer
 
@@ -31,11 +31,11 @@ class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
 
     def __init__(
             self,
-            country,
+            jurisdiction,
             object_retrieval_repo,
             object_lake_repo,
             object_acl_repo):
-        self.country = country
+        self.jurisdiction = jurisdiction
         self.object_retrieval = object_retrieval_repo
         self.object_lake = object_lake_repo
         self.object_acl_repo = object_acl_repo
@@ -51,11 +51,11 @@ class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
     def process(self, job_id, job):
         logger.info(
             "[%s] Running the RetrieveAndStoreForeignDocumentsUseCase for job %s",
-            self.country,
+            self.jurisdiction,
             job
         )
         multihash = job['object']
-        sender = Country(job['sender'])
+        sender = Jurisdiction(job['sender'])
         # 1. check if this object is not in the object lake yet
         # 2. if not - download it to the object lake
         if not self._is_in_object_lake(multihash):
@@ -63,7 +63,7 @@ class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
         # 3. Give receiver access to the object
         self.object_acl_repo.allow_access_to(
             multihash,
-            self.country.name
+            self.jurisdiction.name
         )
         # 4. Delete the job as completed
         # 4.1. Schedule downloads of sub-documents
@@ -82,7 +82,7 @@ class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
                 raise e
         return True
 
-    def _get_docapi_auth_headers(self, source_jrd, doc_api_url):
+    def _get_docapi_auth_headers(self, source_jurisdiction, doc_api_url):
         """
         We support 2 auth methods:
         * dumb - no auth in fact, there are static dict of some demo data is passed around
@@ -92,7 +92,7 @@ class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
 
         TODO: it's probably worth configuring it the same way like we do with channels
         """
-        source_jrd = str(source_jrd)
+        source_jurisdiction = str(source_jurisdiction)
         if doc_api_url.startswith("http://"):
             # local/demo setup
             logger.info("For document API request to %s the dumb auth is used", doc_api_url)
@@ -101,17 +101,17 @@ class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
                     json.dumps({
                         "sub": "documents-api",
                         "party": "spider",
-                        "country": self.country.name,
+                        "jurisdiction": self.jurisdiction.name,
                     })
                 )
             }
         try:
             # first we try to determine the oauth credentials for that
             COGNITO_OAUTH_CREDENTIALS = {
-                "client_id": env_json("IGL_COUNTRY_OAUTH_CLIENT_ID")[source_jrd],
-                "client_secret": env_json("IGL_COUNTRY_OAUTH_CLIENT_SECRET")[source_jrd],
-                "scopes": env_json("IGL_COUNTRY_OAUTH_SCOPES")[source_jrd],
-                "wellknown_url": env_json("IGL_COUNTRY_OAUTH_WELLKNOWN_URL")[source_jrd],
+                "client_id": env_json("IGL_JURISDICTION_OAUTH_CLIENT_ID")[source_jurisdiction],
+                "client_secret": env_json("IGL_JURISDICTION_OAUTH_CLIENT_SECRET")[source_jurisdiction],
+                "scopes": env_json("IGL_JURISDICTION_OAUTH_SCOPES")[source_jurisdiction],
+                "wellknown_url": env_json("IGL_JURISDICTION_OAUTH_WELLKNOWN_URL")[source_jurisdiction],
             }
         except (KeyError, TypeError) as e:
             # It seems that we don't have it configured - so use the demo auth
@@ -128,14 +128,14 @@ class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
         return {}
 
     def _download_remote_obj(self, sender, multihash):
-        logger.info("Downloading %s from %s as %s", multihash, sender, self.country)
+        logger.info("Downloading %s from %s as %s", multihash, sender, self.jurisdiction)
         remote_doc_api_url = sender.object_api_base_url()
         url = urljoin(remote_doc_api_url, multihash)
 
         doc_resp = requests.get(
             url,
             {
-                "as_country": self.country.name,
+                "as_jurisdiction": self.jurisdiction.name,
             },
             # TODO: cognito JWT and other auth methods
             headers=self._get_docapi_auth_headers(sender, remote_doc_api_url)
