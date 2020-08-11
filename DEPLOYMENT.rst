@@ -46,10 +46,10 @@ If you want to run integration tests:
     docker-compose run tests-unit sh -c "cd /src && py.test tests/integration"
 
 
-If you want to run another installation (like second country) use demo-dc-cn.yml file
+If you want to run another installation (like second jurisdiction) use demo-dc-cn.yml file
 and create ``demo-local-cn.env`` file (git excluded, feel free to add your settings):
 
-    IGL_COUNTRY=CN
+    IGL_JURISDICTION=CN
     IGL_DEFAULT_S3_HOST=cnminio.cnint
     IGL_DEFAULT_SQS_HOST=cnelasticmq
     IGL_DEFAULT_POSTGRES_HOST=cnpostgresql
@@ -64,6 +64,6 @@ Configuration
 Is done using env variables.
 Boolean values must be strings and either true or false. JSON values must be rendered objects as a string. Everything else is a string. Lack of value uses default one, which is item-specific, or None if no default is provided.
 
-* IGL_COUNTRY_DOCUMENT_REPORTS - string with JSON dict, keys are 2 character countries names, values are repo urs (http://.../..)
+* IGL_JURISDICTION_DOCUMENT_REPORTS - string with JSON dict, keys are 2 character jurisdictions names, values are repo urs (http://.../..)
 * IGL_DEBUG - enable/disable DEBUG for Flask instances
-* IGL_TESTIG - enable/disable TESTING for Flask instances.
+* IGL_TESTING - enable/disable TESTING for Flask instances.

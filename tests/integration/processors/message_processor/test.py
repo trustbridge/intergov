@@ -19,7 +19,7 @@ NOTIFICATIONS_REPO_CONF = env_queue_config('TEST_3')
 
 BLOCKCHAIN_OUTBOX_REPO_CONF = env_postgres_config('TEST')
 
-OUR_JRD = env("IGL_COUNTRY", default="AU")
+OUR_JRD = env("IGL_JURISDICTION", default="AU")
 
 
 def test():

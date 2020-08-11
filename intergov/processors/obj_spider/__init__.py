@@ -2,7 +2,7 @@ import random
 import time
 
 from intergov.conf import env, env_s3_config, env_queue_config
-from intergov.domain.country import Country
+from intergov.domain.jurisdiction import Jurisdiction
 from intergov.repos.object_lake import ObjectLakeRepo
 from intergov.repos.object_retrieval import ObjectRetrievalRepo
 from intergov.repos.object_acl import ObjectACLRepo
@@ -38,7 +38,7 @@ class ObjectSpider(object):
 
     def _prepare_use_case(self):
         self.use_case = RetrieveAndStoreForeignDocumentsUseCase(
-            country=Country(env("IGL_COUNTRY", default='AU')),
+            jurisdiction=Jurisdiction(env("IGL_JURISDICTION", default='AU')),
             **self.repos
         )
 

@@ -75,7 +75,7 @@ def test(
         assert kwargs.items() <= conf.items()
 
     ProcessMessageUseCase.assert_called_once_with(
-        country=environ["IGL_COUNTRY"],
+        jurisdiction=environ["IGL_JURISDICTION"],
         bc_inbox_repo=BCInboxRepo.return_value,
         message_lake_repo=MessageLakeRepo.return_value,
         object_acl_repo=ObjectACLRepo.return_value,

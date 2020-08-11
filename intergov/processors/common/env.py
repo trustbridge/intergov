@@ -23,7 +23,7 @@ MESSAGE_RX_API_URL = env(
     default='http://message_rx_api'
 )
 
-COUNTRY = env("IGL_COUNTRY", 'AU')
+JURISDICTION = env("IGL_JURISDICTION", 'AU')
 
 ROUTING_TABLE = env_json("IGL_MCHR_ROUTING_TABLE", default=[])
 

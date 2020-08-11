@@ -5,7 +5,7 @@ from flask import (
     Blueprint, Response, request,
 )
 
-from intergov.domain.country import Country
+from intergov.domain.jurisdiction import Jurisdiction
 from intergov.domain.uri import URI
 from intergov.apis.common.errors import (
     InternalServerError
@@ -25,7 +25,7 @@ from .conf import Config
 from .exceptions import (
     TooManyFilesError,
     NoInputFileError,
-    BadCountryNameError,
+    BadJurisdictionNameError,
     InvalidURIError,
     DocumentNotFoundError
 )
@@ -35,14 +35,14 @@ logger = logging.getLogger(__name__)
 blueprint = Blueprint('documents', __name__)
 
 
-@blueprint.route('/countries/<country_name>', methods=['POST'])
+@blueprint.route('/jurisdictions/<jurisdiction_name>', methods=['POST'])
 @routing.mimetype(['multipart/form-data'])
 @statsd_timer("api.document.endpoint.document_post")
-def document_post(country_name):
+def document_post(jurisdiction_name):
     try:
-        target_country = Country(country_name)
+        target_jurisdiction = Jurisdiction(jurisdiction_name)
     except Exception as e:
-        raise BadCountryNameError(e)
+        raise BadJurisdictionNameError(e)
 
     object_lake_repo = ObjectLakeRepo(Config.OBJECT_LAKE_CONN)
     object_acl_repo = ObjectACLRepo(Config.OBJECT_ACL_CONN)
@@ -61,7 +61,7 @@ def document_post(country_name):
     )
 
     try:
-        multihash = use_case.execute(fobj=file, target_country=target_country)
+        multihash = use_case.execute(fobj=file, target_jurisdiction=target_jurisdiction)
     except Exception as e:
         logger.exception(e)
         raise InternalServerError(e)
@@ -91,22 +91,22 @@ def document_fetch(uri):
     )
 
     request_auth = getattr(request, "auth", None)
-    if request_auth and 'country' in request_auth:
+    if request_auth and 'jurisdiction' in request_auth:
         try:
-            auth_country = Country(request_auth['country'])
+            auth_jurisdiction = Jurisdiction(request_auth['jurisdiction'])
         except Exception as e:
-            raise BadCountryNameError(e)
+            raise BadJurisdictionNameError(e)
     else:
         # no auth is provided, trust the GET request
         # assuming JWT will handle it
         # TODO: ensure that the auth provided allows access from that country
         try:
-            auth_country = Country(request.args["as_country"])
+            auth_jurisdiction = Jurisdiction(request.args["as_jurisdiction"])
         except Exception as e:
-            raise BadCountryNameError(e)
+            raise BadJurisdictionNameError(e)
 
     try:
-        document_body = use_case.execute(uri, auth_country)
+        document_body = use_case.execute(uri, auth_jurisdiction)
     except Exception as e:
         logger.exception(e)
         raise InternalServerError(e)
@@ -119,4 +119,4 @@ def document_fetch(uri):
             # TODO: some information about the file content?
         )
     else:
-        raise DocumentNotFoundError(uri, auth_country)
+        raise DocumentNotFoundError(uri, auth_jurisdiction)

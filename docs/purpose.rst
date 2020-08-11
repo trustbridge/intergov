@@ -3,17 +3,17 @@ Purpose
 
 The TrustBridge InterGov codebase is
 a Proof Of Concept (POC) implementation
-of the edi3 Inter Government Ledger (ICL) Specification.
+of the edi3 Inter Government Ledger (IGL) Specification.
 
 The specific goal of this codebase
 is to create infrastructure for
-an independant ICL "Node".
+an independant IGL "Node".
 
 This node is as it would be operated by a Country.
 It provides the interfaces required by the regulated community,
 (i.e. B2G interfaces)
 and it interfaces with "Channels"
-which are are used for communicating with other countries
+which are are used for communicating with other jurisdictions
 (i.e. G2G interfaces).
 It provides a suite of microservices
 that reliably route and deliver messages between the two.
@@ -39,7 +39,7 @@ There are three basic types of deployable component:
 * Worker Processes, which perform asynchronous tasks.
 
 A very high level description of the design looks like this;
-Each country operates a suite of services,
+Each jurisdiction operates a suite of services,
 that provides the following types of integration surface:
 
 * Government to Government (G2G) "channels",

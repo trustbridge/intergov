@@ -2,7 +2,7 @@
 The "Generic Discrete" wire protocol
 can be used to transmit any assertion
 because it implements an RDF style message "triple"
-that is sent from one country to another.
+that is sent from one jurisdiction to another.
 It is "generic" because it does not impose
 restrictions on the information that
 the triples contain.
@@ -11,9 +11,8 @@ carries exactly one assertion (triple).
 """
 import json
 
-from intergov.domain import country as c
 from intergov.domain import uri as u
-
+from intergov.domain.jurisdiction import Jurisdiction
 
 SENDER_KEY = "sender"
 RECEIVER_KEY = "receiver"
@@ -62,12 +61,12 @@ ALLOWED_ATTRS = [
 ALL_ATTRS = REQUIRED_ATTRS + ALLOWED_ATTRS
 
 
-def is_country(value):
-    return isinstance(value, c.Country)
+def is_jurisdiction(value):
+    return isinstance(value, Jurisdiction)
 
 
-def not_country_error(key, value):
-    return f"{key} is not a country: {value}"
+def not_jurisdiction_error(key, value):
+    return f"{key} is not a jurisdiction: {value}"
 
 
 def is_URI(value):
@@ -98,8 +97,8 @@ def not_one_of_error(items):
 
 VALIDATION_FUNCTIONS = {
     # Note that any required field must be present in that dict
-    SENDER_KEY: (is_country, not_country_error),
-    RECEIVER_KEY: (is_country, not_country_error),
+    SENDER_KEY: (is_jurisdiction, not_jurisdiction_error),
+    RECEIVER_KEY: (is_jurisdiction, not_jurisdiction_error),
     SUBJECT_KEY: (not_empty, empty_error),
     OBJ_KEY: (is_URI, not_URI_error),
     PREDICATE_KEY: (is_URI, not_URI_error),
@@ -110,8 +109,8 @@ VALIDATION_FUNCTIONS = {
 }
 
 PROP_TYPES = {
-    SENDER_KEY: c.Country,
-    RECEIVER_KEY: c.Country,
+    SENDER_KEY: Jurisdiction,
+    RECEIVER_KEY: Jurisdiction,
     SUBJECT_KEY: u.URI,
     OBJ_KEY: u.URI,
     PREDICATE_KEY: u.URI,

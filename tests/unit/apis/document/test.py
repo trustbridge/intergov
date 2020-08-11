@@ -2,7 +2,7 @@ import json
 import io
 from http import HTTPStatus
 from unittest import mock
-from intergov.domain.country import Country
+from intergov.domain.jurisdiction import Jurisdiction
 from tests.unit.apis.common.auth.test import VALID_AUTH_NO_ROLE_JSON, _create_auth_headers
 
 from tests.unit.domain.wire_protocols.test_generic_message import (
@@ -24,23 +24,22 @@ from intergov.apis.common.errors.handlers import (
 from intergov.apis.document.exceptions import (
     TooManyFilesError,
     NoInputFileError,
-    BadCountryNameError,
+    BadJurisdictionNameError,
     DocumentNotFoundError,
     InvalidURIError
 )
 
-VALID_COUNTRY_NAME = 'US'
-INVALID_COUNTRY_NAME = 'USUS'
+VALID_JURISDICTION_NAME = 'US'
+INVALID_JURISDICTION_NAME = 'USUS'
 
-VALID_COUNTRY_AUTH_JSON = {**VALID_AUTH_NO_ROLE_JSON, 'country': VALID_COUNTRY_NAME}
-INVALID_COUNTRY_AUTH_JSON = {**VALID_AUTH_NO_ROLE_JSON, 'country': INVALID_COUNTRY_NAME}
+VALID_JURISDICTION_AUTH_JSON = {**VALID_AUTH_NO_ROLE_JSON, 'jurisdiction': VALID_JURISDICTION_NAME}
+INVALID_JURISDICTION_AUTH_JSON = {**VALID_AUTH_NO_ROLE_JSON, 'jurisdiction': INVALID_JURISDICTION_NAME}
 
-VALID_AUTH_HEADERS = _create_auth_headers(VALID_COUNTRY_AUTH_JSON)
-INVALID_AUTH_HEADERS = _create_auth_headers(INVALID_COUNTRY_AUTH_JSON)
+VALID_AUTH_HEADERS = _create_auth_headers(VALID_JURISDICTION_AUTH_JSON)
+INVALID_AUTH_HEADERS = _create_auth_headers(INVALID_JURISDICTION_AUTH_JSON)
 
-DOCUMENT_POST_URL = '/countries/{}'
+DOCUMENT_POST_URL = '/jurisdictions/{}'
 DOCUMENT_GET_URL = '/{}'
-DOCUMENT_GET_URL_COUNTRY_KEY = 'view_as_country'
 VALID_DOCUMENT_URI = _random_multihash()
 INVALID_DOCUMENT_URI = _random_multihash() + "not multihash"
 
@@ -50,8 +49,8 @@ AUTHENTICATED_OBJECT_ACCESS_USE_CASE_CLASS = 'intergov.apis.document.documents.A
 RECORD_OBJECT_USE_CASE_CLASS = 'intergov.apis.document.documents.RecordObjectUseCase'
 
 
-VALID_POST_REQUEST_COUNTRY_URL = DOCUMENT_POST_URL.format(VALID_COUNTRY_NAME)
-INVALID_POST_REQUEST_COUNTRY_URL = DOCUMENT_POST_URL.format(INVALID_COUNTRY_NAME)
+VALID_POST_REQUEST_JURISDICTION_URL = DOCUMENT_POST_URL.format(VALID_JURISDICTION_NAME)
+INVALID_POST_REQUEST_JURISDICTION_URL = DOCUMENT_POST_URL.format(INVALID_JURISDICTION_NAME)
 
 VALID_POST_REQUEST_MIMETYPE = 'multipart/form-data'
 INVALID_POST_REQUEST_MIMETYPE = 'application/json'
@@ -103,11 +102,11 @@ def test_errors(client):
         'source': []
     }
 
-    assert BadCountryNameError(Exception('hey')).to_dict() == {
+    assert BadJurisdictionNameError(Exception('hey')).to_dict() == {
         'status': 'Bad Request',
-        'title': 'Bad Country Name Error',
-        'code': 'bad-country-name-error',
-        'detail': 'Received invalid/unknown country name',
+        'title': 'Bad Jurisdiction Name Error',
+        'code': 'bad-jurisdiction-name-error',
+        'detail': 'Received invalid/unknown jurisdiction name',
         'source': [
             str(Exception('hey'))
         ]
@@ -134,11 +133,11 @@ def test_errors(client):
         'status': 'Not Found',
         'code': 'generic-http-error',
         'title': 'Not Found',
-        'detail': 'Document with uri:a for country:b not found',
+        'detail': 'Document with uri:a for jurisdiction:b not found',
         'source': [
             {
                 'uri': 'a',
-                'country': 'b'
+                'jurisdiction': 'b'
             }
         ]
     }
@@ -152,7 +151,7 @@ def test_post_document(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     post_from_file_obj = ObjectLakeRepoMock.return_value.post_from_file_obj
 
     resp = client.post(
-        VALID_POST_REQUEST_COUNTRY_URL,
+        VALID_POST_REQUEST_JURISDICTION_URL,
         mimetype=VALID_POST_REQUEST_MIMETYPE,
         data=get_valid_post_request_files()
     )
@@ -170,7 +169,7 @@ def test_post_document(ObjectLakeRepoMock, ObjectACLRepoMock, client):
 def test_post_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
 
     resp = client.post(
-        INVALID_POST_REQUEST_COUNTRY_URL,
+        INVALID_POST_REQUEST_JURISDICTION_URL,
         mimetype=INVALID_POST_REQUEST_MIMETYPE,
         data={}
     )
@@ -186,12 +185,12 @@ def test_post_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     )
 
     try:
-        Country(INVALID_COUNTRY_NAME)
+        Jurisdiction(INVALID_JURISDICTION_NAME)
     except Exception as e:
-        country_exception = e
+        jurisdiction_exception = e
 
     resp = client.post(
-        INVALID_POST_REQUEST_COUNTRY_URL,
+        INVALID_POST_REQUEST_JURISDICTION_URL,
         mimetype=VALID_POST_REQUEST_MIMETYPE,
         data={}
     )
@@ -199,11 +198,11 @@ def test_post_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     assert resp.mimetype == VALID_ERROR_RESPONSE_MIMETYPE
     assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert resp.get_json() == error_response_json_template(
-        BadCountryNameError(country_exception)
+        BadJurisdictionNameError(jurisdiction_exception)
     )
 
     resp = client.post(
-        VALID_POST_REQUEST_COUNTRY_URL,
+        VALID_POST_REQUEST_JURISDICTION_URL,
         mimetype=VALID_POST_REQUEST_MIMETYPE,
         data={}
     )
@@ -215,7 +214,7 @@ def test_post_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     )
 
     resp = client.post(
-        VALID_POST_REQUEST_COUNTRY_URL,
+        VALID_POST_REQUEST_JURISDICTION_URL,
         mimetype=VALID_POST_REQUEST_MIMETYPE,
         data=get_too_many_post_request_files()
     )
@@ -233,7 +232,7 @@ def test_post_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     post_from_file_obj.side_effect = Exception('Very bad thing: Lake')
 
     resp = client.post(
-        VALID_POST_REQUEST_COUNTRY_URL,
+        VALID_POST_REQUEST_JURISDICTION_URL,
         mimetype=VALID_POST_REQUEST_MIMETYPE,
         data=get_valid_post_request_files()
     )
@@ -250,7 +249,7 @@ def test_post_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     allow_access_to.side_effect = None
 
     resp = client.post(
-        VALID_POST_REQUEST_COUNTRY_URL,
+        VALID_POST_REQUEST_JURISDICTION_URL,
         mimetype=VALID_POST_REQUEST_MIMETYPE,
         data=get_valid_post_request_files()
     )
@@ -269,9 +268,9 @@ def test_post_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
 @mock.patch(OBJECT_LAKE_REPO_CLASS)
 def test_get_document(ObjectLakeRepoMock, ObjectACLRepoMock, client):
 
-    # testing country behaviour
+    # testing jurisdiction behaviour
     search = ObjectACLRepoMock.return_value.search
-    search.return_value = [Country(VALID_COUNTRY_NAME)]
+    search.return_value = [Jurisdiction(VALID_JURISDICTION_NAME)]
 
     get_body = ObjectLakeRepoMock.return_value.get_body
     get_body.return_value = json.dumps(DOCUMENT_JSON)
@@ -309,11 +308,11 @@ def test_get_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
         InvalidURIError()
     )
 
-    # testing invalid country auth headers
+    # testing invalid jurisdiction auth headers
     try:
-        Country(INVALID_COUNTRY_NAME)
+        Jurisdiction(INVALID_JURISDICTION_NAME)
     except Exception as e:
-        country_exception = e
+        jurisdiction_exception = e
 
     resp = client.get(
         DOCUMENT_GET_URL.format(VALID_DOCUMENT_URI),
@@ -323,7 +322,7 @@ def test_get_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     assert resp.mimetype == VALID_ERROR_RESPONSE_MIMETYPE, resp.data
     assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.data
     assert resp.get_json() == error_response_json_template(
-        BadCountryNameError(country_exception)
+        BadJurisdictionNameError(jurisdiction_exception)
     )
 
     search = ObjectACLRepoMock.return_value.search
@@ -345,7 +344,7 @@ def test_get_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     assert resp.get_json() == error_response_json_template(
         DocumentNotFoundError(
             VALID_DOCUMENT_URI,
-            Country(VALID_COUNTRY_NAME)
+            Jurisdiction(VALID_JURISDICTION_NAME)
         )
     )
 
@@ -375,7 +374,7 @@ def test_get_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     search.reset_mock()
     get_body.reset_mock()
     search.side_effect = None
-    search.return_value = [Country(VALID_COUNTRY_NAME)]
+    search.return_value = [Jurisdiction(VALID_JURISDICTION_NAME)]
     get_body.side_effect = NoSuchKey
 
     resp = client.get(
@@ -391,7 +390,7 @@ def test_get_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     assert resp.get_json() == error_response_json_template(
         DocumentNotFoundError(
             VALID_DOCUMENT_URI,
-            Country(VALID_COUNTRY_NAME)
+            Jurisdiction(VALID_JURISDICTION_NAME)
         )
     )
 
@@ -402,7 +401,7 @@ def test_get_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
 
     search.reset_mock()
     get_body.reset_mock()
-    search.return_value = [Country(VALID_COUNTRY_NAME)]
+    search.return_value = [Jurisdiction(VALID_JURISDICTION_NAME)]
     get_body.side_effect = None
     get_body.return_value = None
 
@@ -419,14 +418,14 @@ def test_get_document_errors(ObjectLakeRepoMock, ObjectACLRepoMock, client):
     assert resp.get_json() == error_response_json_template(
         DocumentNotFoundError(
             VALID_DOCUMENT_URI,
-            Country(VALID_COUNTRY_NAME)
+            Jurisdiction(VALID_JURISDICTION_NAME)
         )
     )
 
     # testing unexpected lake repo error
     search.reset_mock()
     get_body.reset_mock()
-    search.return_value = [Country(VALID_COUNTRY_NAME)]
+    search.return_value = [Jurisdiction(VALID_JURISDICTION_NAME)]
     get_body.side_effect = Exception('Bad times came')
 
     resp = client.get(

@@ -4,9 +4,8 @@ import copy
 import json
 import multihash
 
-
+from intergov.domain.jurisdiction import Jurisdiction
 from intergov.domain.wire_protocols import generic_discrete as gd
-from intergov.domain import country as c
 from intergov.domain import uri as u
 from intergov.serializers import generic_discrete_message as ser
 
@@ -87,8 +86,8 @@ def _diff_message_dicts(left, right, keys=[]):
 def _generate_message_params():
     msg_dict = _generate_msg_dict()
 
-    A = c.Country(msg_dict["sender"])
-    B = c.Country(msg_dict["receiver"])
+    A = Jurisdiction(msg_dict["sender"])
+    B = Jurisdiction(msg_dict["receiver"])
     subject = u.URI(msg_dict["subject"])
     obj = u.URI(msg_dict["obj"])
     predicate = u.URI(msg_dict["predicate"])

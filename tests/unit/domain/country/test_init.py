@@ -1,42 +1,42 @@
 import pytest
 from unittest import mock
-from intergov.domain.country import Country
+from intergov.domain.jurisdiction import Jurisdiction
 
 
-def test_country_object_initialization():
+def test_jurisdiction_object_initialization():
     # For now I don't see any other way to check proper initialization
     # initialization failure cases in this test are much more important
-    assert Country('US').name == 'US'
+    assert Jurisdiction('US').name == 'US'
 
 
-def test_country_object_initialization_failure():
+def test_jurisdiction_object_initialization_failure():
 
     # no argument
     with pytest.raises(TypeError):
-        Country()
+        Jurisdiction()
 
     # lowercase
     with pytest.raises(TypeError):
-        Country('us')
+        Jurisdiction('us')
 
     # more than 2 letters
     with pytest.raises(TypeError):
-        Country('USA')
+        Jurisdiction('USA')
 
     # less than 2 letters
     with pytest.raises(TypeError):
-        Country('U')
+        Jurisdiction('U')
 
     # empty string
     with pytest.raises(TypeError):
-        Country('')
+        Jurisdiction('')
 
     # not string argument
     with pytest.raises(AssertionError):
-        Country(1)
+        Jurisdiction(1)
 
-    # unknown country
+    # unknown jurisdiction
     with mock.patch('pycountry.countries.get', return_value=None) as get_country:
         with pytest.raises(ValueError):
-            Country('US')
+            Jurisdiction('US')
         get_country.assert_called()

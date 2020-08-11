@@ -2,7 +2,7 @@ import json
 
 from libtrustbridge.repos import miniorepo
 
-from intergov.domain.country import Country
+from intergov.domain.jurisdiction import Jurisdiction
 from intergov.loggers import logging  # NOQA
 from intergov.serializers import generic_discrete_message as ser
 
@@ -62,7 +62,7 @@ class ObjectACLRepo(miniorepo.MinioRepo):
 
     def search(self, filters=None):
         """
-        # TODO: we may do a faster version of it just to check if given country
+        # TODO: we may do a faster version of it just to check if given jurisdiction
         # may do this operation
         Because post() stores each message
         at the location representing the object,
@@ -92,15 +92,15 @@ class ObjectACLRepo(miniorepo.MinioRepo):
         if not found_objects.get('Contents', []):
             return []
         else:
-            uniq_countries = set()
+            uniq_jurisdictions = set()
             for obj in found_objects.get('Contents', []):
                 pure_filename = obj['Key'].split('/')[-1]
                 if obj['Key'].endswith('.json'):
                     # based on rx_message, there is message in this file
                     # oname is something like /QmXx/xxx/xxxx/CN.json
-                    country_name = pure_filename.split('.')[0]
+                    jurisdiction_name = pure_filename.split('.')[0]
                 else:
                     # based on uploaded document, the file is empty
-                    country_name = pure_filename
-                uniq_countries.add(country_name)
-            return [Country(c) for c in uniq_countries]
+                    jurisdiction_name = pure_filename
+                uniq_jurisdictions.add(jurisdiction_name)
+            return [Jurisdiction(c) for c in uniq_jurisdictions]

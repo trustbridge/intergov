@@ -4,7 +4,7 @@
 class PostMessageToAPIInboxUseCase:
     """
     Is called by a blockchain listener
-    Receives incoming message (from the remote country) and
+    Receives incoming message (from the remote jurisdiction) and
     ensures that this message is handled somehow
     """
 

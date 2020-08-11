@@ -16,11 +16,11 @@ It is responsible for routing messages between Governments
 .. autoclass:: intergov.processors.multichannel_router.MultichannelWorker
 
 Note: channels abstract over topology, technology and wire protocols.
-This means that countries are free
+This means that jurisdictions are free
 to determine bilaterally or multilaterally
 agreeable channels.
 This component will be configured to use the channels
-as per the operating countries agreements.
+as per the operating jurisdictions agreements.
 
 .. uml::
 

@@ -42,7 +42,7 @@ from .exceptions import (
 
 blueprint = Blueprint('messages', __name__)
 logger = logging.getLogger(__name__)
-IGL_COUNTRY = env('IGL_COUNTRY', default=None)
+IGL_JURISDICTION = env('IGL_JURISDICTION', default=None)
 
 
 @statsd_timer("api.message.endpoint.message_retrieve")
@@ -146,7 +146,7 @@ def message_post():
     if not message.sender_ref:
         message.kwargs["sender_ref"] = str(uuid.uuid4())
 
-    if str(IGL_COUNTRY) == str(message.sender):
+    if str(IGL_JURISDICTION) == str(message.sender):
         # because we are first who see that message
         message.kwargs["status"] = "pending"
     else:
