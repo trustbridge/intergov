@@ -1,10 +1,24 @@
+from apispec import APISpec
+from apispec.ext.marshmallow import MarshmallowPlugin
+from apispec_webframeworks.flask import FlaskPlugin
 from flask import Flask
 from flask.wrappers import Request
+from libtrustbridge.utils.specs import register_specs
 
 from intergov.apis.common.errors import handlers
 from intergov.apis.document import documents, index
 from intergov.apis.document.conf import Config
-from intergov.loggers import logging  # NOQA
+
+
+spec = APISpec(
+        title="Document API",
+        version="1.0.0",
+        openapi_version="3.0.2",
+        plugins=[
+            FlaskPlugin(),
+            MarshmallowPlugin(),
+        ],
+    )
 
 
 class BigMemoryRequest(Request):
@@ -30,4 +44,5 @@ def create_app(config_object=None):
     app.register_blueprint(index.blueprint)
     app.register_blueprint(documents.blueprint)
     handlers.register(app)
+    register_specs(app, spec, views=('document_post', 'document_fetch',))
     return app

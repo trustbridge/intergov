@@ -3,6 +3,7 @@ import uuid
 from http import HTTPStatus
 
 from flask import Blueprint, Response, request
+from marshmallow import Schema, fields
 
 from intergov.conf import env
 from intergov.repos.message_lake import MessageLakeRepo
@@ -45,9 +46,38 @@ logger = logging.getLogger(__name__)
 IGL_JURISDICTION = env('IGL_JURISDICTION', default=None)
 
 
+class MessageSchema(Schema):
+    sender = fields.String(required=True)
+    receiver = fields.String(required=True)
+    subject = fields.String(required=True)
+    obj = fields.String(required=True)
+    predicate = fields.String(required=True)
+    channel_id = fields.String()
+    channel_txn_id = fields.String()
+    status = fields.String()
+    sender_ref = fields.String()
+
+
 @statsd_timer("api.message.endpoint.message_retrieve")
 @blueprint.route('/message/<reference>', methods=['GET'])
 def message_retrieve(reference):
+    """
+    ---
+    get:
+      parameters:
+      - in: path
+        name: reference
+        schema:
+          type: string
+        required: true
+      responses:
+        201:
+          description: Is this the right code?
+          content:
+            application/json:
+              schema: MessageSchema
+
+    """
     # TODO: auth
     repo = MessageLakeRepo(Config.MESSAGE_LAKE_CONN)
 
@@ -80,6 +110,27 @@ def message_retrieve(reference):
 @blueprint.route('/message/<reference>', methods=['PATCH'])
 @routing.mimetype(['application/json'])
 def message_patch(reference):
+    """
+    ---
+    patch:
+      parameters:
+      - in: path
+        name: reference
+        schema:
+          type: string
+        required: true
+      requestBody:
+        content:
+          application/json:
+            schema: MessageSchema
+      responses:
+        200:
+          description: Update a message
+          content:
+            application/json:
+              schema: MessageSchema
+
+    """
     # TODO: auth
     json_payload = request.get_json(silent=True)
     if not json_payload or not isinstance(json_payload, dict):
@@ -130,6 +181,18 @@ def message_patch(reference):
 def message_post():
     """
     Puts message to the message lake and into the processing queue
+    ---
+    post:
+      requestBody:
+        content:
+          application/binary:
+            schema: MessageSchema
+      responses:
+        200:
+          description: The message was successfully sent to the node
+          content:
+            application/json:
+              schema: MessageSchema
     """
     body = request.get_json(silent=True)
     if not body or not isinstance(body, dict):

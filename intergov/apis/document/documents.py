@@ -5,22 +5,21 @@ from flask import (
     Blueprint, Response, request,
 )
 
-from intergov.domain.jurisdiction import Jurisdiction
-from intergov.domain.uri import URI
+from intergov.apis.common.demoauth import demo_auth
 from intergov.apis.common.errors import (
     InternalServerError
 )
-from intergov.apis.common.demoauth import demo_auth
 from intergov.apis.common.utils import routing
+from intergov.domain.jurisdiction import Jurisdiction
+from intergov.domain.uri import URI
 from intergov.loggers import logging  # NOQA
 from intergov.monitoring import statsd_timer
-from intergov.repos.object_lake import ObjectLakeRepo
 from intergov.repos.object_acl import ObjectACLRepo
+from intergov.repos.object_lake import ObjectLakeRepo
 from intergov.use_cases import (
     AuthenticatedObjectAccessUseCase,
     StoreObjectUseCase
 )
-
 from .conf import Config
 from .exceptions import (
     TooManyFilesError,
@@ -39,6 +38,33 @@ blueprint = Blueprint('documents', __name__)
 @routing.mimetype(['multipart/form-data'])
 @statsd_timer("api.document.endpoint.document_post")
 def document_post(jurisdiction_name):
+    """
+    ---
+    post:
+      parameters:
+      - in: path
+        name: jurisdiction_name
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/binary:
+            schema:
+                format: binary
+                type: string
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                properties:
+                  multihash:
+                    format: uuid
+                    type: string
+                type: object
+          description: Returns document id
+    """
     try:
         target_jurisdiction = Jurisdiction(jurisdiction_name)
     except Exception as e:
@@ -79,6 +105,25 @@ def document_post(jurisdiction_name):
 @demo_auth()
 @statsd_timer("api.document.endpoint.document_fetch")
 def document_fetch(uri):
+    """
+    ---
+    get:
+      parameters:
+      - in: path
+        name: uri
+        required: true
+        schema:
+          format: uuid
+          type: string
+      responses:
+        200:
+          content:
+            application/binary:
+              schema:
+                format: binary
+                type: string
+          description: Returns document
+    """
     if not URI(uri).is_valid_multihash():
         raise InvalidURIError()
 

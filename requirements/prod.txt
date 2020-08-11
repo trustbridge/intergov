@@ -7,6 +7,10 @@ multihash==0.1.1
 minio==4.0.16
 boto3==1.9.151
 
+# swagger docs
+apispec[yaml,validation]==3.3.1
+apispec-webframeworks==0.5.2
+
 # external errors logging
 sentry-sdk==0.16.0
 blinker==1.4
