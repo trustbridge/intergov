@@ -1,9 +1,23 @@
+from apispec import APISpec
+from apispec.ext.marshmallow import MarshmallowPlugin
+from apispec_webframeworks.flask import FlaskPlugin
 from flask import Flask
+from libtrustbridge.utils.specs import register_specs
 
 from intergov.apis.common.errors import handlers
 from intergov.apis.message import message, index
 from intergov.apis.message.conf import Config
-from intergov.loggers import logging  # NOQA
+
+
+spec = APISpec(
+        title="Message API",
+        version="1.0.0",
+        openapi_version="3.0.2",
+        plugins=[
+            FlaskPlugin(),
+            MarshmallowPlugin(),
+        ],
+    )
 
 
 def create_app(config_object=None):
@@ -23,4 +37,5 @@ def create_app(config_object=None):
     app.register_blueprint(index.blueprint)
     app.register_blueprint(message.blueprint)
     handlers.register(app)
+    register_specs(app, spec, views=('message_retrieve', 'message_patch', 'message_post'))
     return app

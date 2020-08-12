@@ -1,8 +1,23 @@
+from apispec import APISpec
+from apispec.ext.marshmallow import MarshmallowPlugin
+from apispec_webframeworks.flask import FlaskPlugin
 from flask import Flask
+from libtrustbridge.utils.specs import register_specs
 
 from intergov.apis.subscriptions import subscriptions, index
 from intergov.apis.subscriptions.conf import Config
 from libtrustbridge.errors import handlers
+
+
+spec = APISpec(
+        title="Subscription API",
+        version="1.0.0",
+        openapi_version="3.0.2",
+        plugins=[
+            FlaskPlugin(),
+            MarshmallowPlugin(),
+        ],
+    )
 
 
 def create_app(config_object=None):
@@ -22,4 +37,5 @@ def create_app(config_object=None):
     app.register_blueprint(index.blueprint)
     app.register_blueprint(subscriptions.blueprint)
     handlers.register(app)
+    register_specs(app, spec, ('subscription_register', ))
     return app

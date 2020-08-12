@@ -171,6 +171,29 @@ def _recast_form(form):
 @routing.mimetype([VALID_REQUEST_CONTENT_TYPE])
 @statsd_timer("api.subscriptions.endpoint.subscription_register")
 def subscription_register():
+    """
+    ---
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                hub.topic:
+                  type: string
+                hub.callback:
+                  type: string
+                hub.mode:
+                  type: string
+                hub.lease_seconds:
+                  format: int64
+                  type: integer
+              required: [hub.topic, hub.callback, hub.mode]
+              type: object
+      responses:
+        202:
+          description: Indicates successful subscription
+    """
     form = request.form.to_dict()
     missing = _check_required_attrs(form)
     _fill_attrs_defaults(form)
