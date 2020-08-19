@@ -35,6 +35,7 @@ blueprint = Blueprint('documents', __name__)
 
 
 @blueprint.route('/jurisdictions/<jurisdiction_name>', methods=['POST'])
+@blueprint.route('/countries/<jurisdiction_name>', methods=['POST'])
 @routing.mimetype(['multipart/form-data'])
 @statsd_timer("api.document.endpoint.document_post")
 def document_post(jurisdiction_name):
