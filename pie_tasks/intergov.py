@@ -67,7 +67,7 @@ def restart():
 @task
 def destroy():
     with INSTANCE_ENVIRONMENT():
-        DOCKER_COMPOSE.cmd('down',options=['-v', '--rmi all'])
+        DOCKER_COMPOSE.cmd('down',options=['-v', '--rmi local'])
 
 
 
