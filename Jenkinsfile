@@ -392,7 +392,7 @@ pipeline {
                             sh '''
                                 npm install swagger-cli
 
-                                npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type swagger.yaml
+                                npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
                                 npx swagger-cli validate openapi-extended-base.json
 
                                 mkdir -p dist/
@@ -448,7 +448,7 @@ pipeline {
                             sh '''
                                 npm install swagger-cli
 
-                                npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type swagger.yaml
+                                npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
                                 npx swagger-cli validate openapi-extended-base.json
 
                                 mkdir -p dist/
@@ -505,7 +505,7 @@ pipeline {
                             sh '''
                                 npm install swagger-cli
 
-                                npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type swagger.yaml
+                                npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
                                 npx swagger-cli validate openapi-extended-base.json
 
                                 mkdir -p dist/
@@ -562,7 +562,7 @@ pipeline {
                             sh '''
                                 npm install swagger-cli
 
-                                npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type swagger.yaml
+                                npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
                                 npx swagger-cli validate openapi-extended-base.json
 
                                 mkdir -p dist/
