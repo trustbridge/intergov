@@ -19,6 +19,7 @@ pipeline {
         COMPOSE_PROJECT_NAME = "igl-node-au"
         cd_environment = 'c1'
         slack_channel = '#igl-automatic-messages'
+        properties_file = '/var/opt/properties/devnet.properties'
     }
 
     parameters {
