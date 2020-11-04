@@ -27,6 +27,11 @@ pipeline {
             defaultValue: false,
             description: 'Run integration tests for all components'
         )
+        booleanParam(
+            name: 'force_deploy',
+            defaultValue: false,
+            description: 'Force deployment to start'
+        )
     }
 
     stages {
@@ -100,7 +105,7 @@ pipeline {
         stage('Artefact')  {
             when {
                 anyOf {
-                    equals expected: true, actual: params.force_intergov
+                    equals expected: true, actual: params.force_deploy
                     allOf {
                         branch 'master'
                     }
