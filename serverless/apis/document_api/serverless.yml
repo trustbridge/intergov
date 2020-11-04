@@ -17,7 +17,7 @@ custom:
     app: intergov.apis.document.lambda.app
     packRequirements: false
   pythonRequirements:
-    dockerizePip: 'non-linux'
+    dockerizePip: true
     fileName: ../../intergov/requirements/prod.txt
 
 provider:
@@ -31,4 +31,3 @@ functions:
     handler: wsgi_handler.handler
     events:
       - http: ANY /
-      - http: ANY {proxy+}
