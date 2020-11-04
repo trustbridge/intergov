@@ -37,7 +37,7 @@ pipeline {
 
                 stage('Setup') {
                     steps {
-                        dir('/test/intergov/') {
+                        dir('test/intergov/') {
                             script{
                                 def repo = checkout scm
                                 env.GIT_COMMIT = repo
