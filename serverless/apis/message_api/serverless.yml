@@ -1,0 +1,35 @@
+service: intergov-message-api
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+
+package:
+  individually: true
+  include:
+    - '!./**'
+    - './intergov/**'
+  exclude:
+    - '**'
+
+custom:
+  wsgi:
+    app: intergov.apis.message.lambda.app
+    packRequirements: false
+  pythonRequirements:
+    dockerizePip: 'non-linux'
+    invalidateCaches: true
+    fileName: requirements/prod.txt
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: dev
+  region: ap-southeast-2
+
+functions:
+  message_api:
+    handler: wsgi_handler.handler
+    events:
+      - http: ANY /
+      - http: ANY {proxy+}
