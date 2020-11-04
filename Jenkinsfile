@@ -389,8 +389,13 @@ pipeline {
                     steps {
 
                         dir('artefact/intergov/apis/document') {
-                            sh '''
-                                npm install swagger-cli
+                             sh '''#!/bin/bash
+                                # Workaround for missing api spec
+                                if [[ ! -f swagger.yaml ]]; then
+                                    cp ../../../serverless/apis/swagger.yaml ./
+                                fi
+
+                                npm install --no-save swagger-cli
 
                                 npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
                                 npx swagger-cli validate openapi-extended-base.json
@@ -445,8 +450,13 @@ pipeline {
                     steps {
 
                         dir('artefact/intergov/apis/message') {
-                            sh '''
-                                npm install swagger-cli
+                            sh '''#!/bin/bash
+                                # Workaround for missing api spec
+                                if [[ ! -f swagger.yaml ]]; then
+                                    cp ../../../serverless/apis/swagger.yaml ./
+                                fi
+
+                                npm install --no-save swagger-cli
 
                                 npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
                                 npx swagger-cli validate openapi-extended-base.json
@@ -502,14 +512,13 @@ pipeline {
                     steps {
 
                         dir('artefact/intergov/apis/message_rx') {
-                            sh '''
-
+                            sh '''#!/bin/bash
                                 # Workaround for missing api spec
                                 if [[ ! -f swagger.yaml ]]; then
                                     cp ../../../serverless/apis/swagger.yaml ./
                                 fi
 
-                                npm install swagger-cli
+                                npm install --no-save swagger-cli
 
                                 npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
                                 npx swagger-cli validate openapi-extended-base.json
@@ -565,8 +574,13 @@ pipeline {
                     steps {
 
                         dir('artefact/intergov/apis/subscriptions') {
-                            sh '''
-                                npm install swagger-cli
+                            sh '''#!/bin/bash
+                                # Workaround for missing api spec
+                                if [[ ! -f swagger.yaml ]]; then
+                                    cp ../../../serverless/apis/swagger.yaml ./
+                                fi
+
+                                npm install --no-save swagger-cli
 
                                 npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
                                 npx swagger-cli validate openapi-extended-base.json
@@ -614,10 +628,10 @@ pipeline {
                         //hamlet deployment variables
                         DEPLOYMENT_UNITS =  'proc-msg,proc-msgupdater,proc-callbdel,proc-callbspd,proc-rejstat,proc-docspider,proc-channelrouter,proc-channelpoller,proc-subhandler,proc-chnmsgret'
                         SEGMENT = 'intergov'
-                        BUILD_PATH = 'artefact/intergov/'
-                        DOCKER_CONTEXT_DIR = 'artefact/intergov/'
+                        BUILD_PATH = 'artefact/'
+                        DOCKER_CONTEXT_DIR = 'artefact/'
                         BUILD_SRC_DIR = ''
-                        DOCKER_FILE = 'artefact/intergov/docker/node.Dockerfile'
+                        DOCKER_FILE = 'artefact/docker/node.Dockerfile'
                         GENERATION_CONTEXT_DEFINED = ''
 
                         image_format = 'docker'
