@@ -126,7 +126,7 @@ pipeline {
 
                         script {
                             def productProperties = readProperties interpolate: true, file: "${properties_file}" ;
-                            contextProperties.each{ k, v -> env["${k}"] ="${v}" }
+                            productProperties.each{ k, v -> env["${k}"] ="${v}" }
                         }
 
                     }
@@ -148,17 +148,17 @@ pipeline {
 
                                 npm ci
 
-                                sls package --package ../dist/document_api --config "apis/document_api/serverless.yml"
-                                sls package --package ../dist/message_api --config "apis/message_api/serverless.yml"
-                                sls package --package ../dist/message_rx_api --config "apis/message_rx_api/serverless.yml"
-                                sls package --package ../dist/subscriptions_api --config "apis/subscriptions_api/serverless.yml"
+                                npx sls package --package dist/document_api      --config "apis/document_api/serverless.yml"
+                                npx sls package --package dist/message_api       --config "apis/message_api/serverless.yml"
+                                npx sls package --package dist/message_rx_api    --config "apis/message_rx_api/serverless.yml"
+                                npx sls package --package dist/subscriptions_api --config "apis/subscriptions_api/serverless.yml"
                             '''
                         }
                     }
 
                     post {
                         success {
-                            dir('artefact/') {
+                            dir('artefact/serverless') {
                                 archiveArtifacts artifacts: 'dist/document_api/document_api.zip', fingerprint: true
                                 archiveArtifacts artifacts: 'dist/message_api/message_api.zip', fingerprint: true
                                 archiveArtifacts artifacts: 'dist/message_rx_api/message_rx_api.zip', fingerprint: true
@@ -182,9 +182,9 @@ pipeline {
 
                     steps {
 
-                        dir('aretefact/') {
+                        dir('artefact/serverless') {
                             sh '''
-                                cp dist/document_api/document_api.zip dist/lambda.zip
+                                cp dist/document_api/document_api.zip ${WORKSPACE}/artefact/dist/lambda.zip
                             '''
                         }
 
@@ -232,9 +232,9 @@ pipeline {
 
                     steps {
 
-                        dir('aretfact/') {
+                        dir('artefact/serverless') {
                             sh '''
-                                cp dist/message_api/message_api.zip dist/lambda.zip
+                                cp dist/message_api/message_api.zip ${WORKSPACE}/artefact/dist/lambda.zip
                             '''
                         }
 
@@ -282,9 +282,9 @@ pipeline {
 
                     steps {
 
-                        dir('intergov') {
+                        dir('artefact/serverless') {
                             sh '''
-                                cp dist/message_rx_api/message_rx_api.zip dist/lambda.zip
+                                cp dist/message_rx_api/message_rx_api.zip ${WORKSPACE}/artefact/dist/lambda.zip
                             '''
                         }
 
@@ -332,9 +332,9 @@ pipeline {
 
                     steps {
 
-                        dir('intergov') {
+                        dir('artefact/serverless') {
                             sh '''
-                                cp dist/subscriptions_api/subscriptions_api.zip dist/lambda.zip
+                                cp dist/subscriptions_api/subscriptions_api.zip ${WORKSPACE}/artefact/dist/lambda.zip
                             '''
                         }
 
