@@ -120,7 +120,7 @@ pipeline {
                         dir('artefact/') {
                             script{
                                 def repo = checkout scm
-                                env.GIT_COMMIT = repo
+                                env.GIT_COMMIT = repo.GIT_COMMIT
                             }
                         }
 

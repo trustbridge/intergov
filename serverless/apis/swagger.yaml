@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+  version: v1.0.0
+  title: Proxy
+  description: |
+    Default specification which forwards all requests to the implementation
+paths:
+  "/{proxy+}":
+    x-amazon-apigateway-any-method:
+      responses:
+        default:
+          description: Default response
+components:
+  schemas:
+    Empty:
+      type: object
+      title: Empty Schema
