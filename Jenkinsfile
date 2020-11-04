@@ -374,13 +374,13 @@ pipeline {
 
 
                 // Intergov - API Gateways
-                stage('Aretfact - document_api - gw') {
+                stage('artefact - document_api - gw') {
 
                     environment {
                         //hamlet deployment variables
                         DEPLOYMENT_UNITS = 'document-api'
                         SEGMENT = 'intergov'
-                        BUILD_PATH = 'intergov/apis/document'
+                        BUILD_PATH = 'artefact/intergov/apis/document'
                         GENERATION_CONTEXT_DEFINED = ''
 
                         image_format = 'openapi'
@@ -388,7 +388,7 @@ pipeline {
 
                     steps {
 
-                        dir('aretfact/intergov/apis/document') {
+                        dir('artefact/intergov/apis/document') {
                             sh '''
                                 npm install swagger-cli
 
@@ -430,13 +430,13 @@ pipeline {
 
                 }
 
-                stage('Aretfact - message_api - gw') {
+                stage('artefact - message_api - gw') {
 
                     environment {
                         //hamlet deployment variables
                         DEPLOYMENT_UNITS = 'message-api'
                         SEGMENT = 'intergov'
-                        BUILD_PATH = 'intergov/apis/message'
+                        BUILD_PATH = 'artefact/intergov/apis/message'
                         GENERATION_CONTEXT_DEFINED = ''
 
                         image_format = 'openapi'
@@ -444,7 +444,7 @@ pipeline {
 
                     steps {
 
-                        dir('aretfact/intergov/apis/message') {
+                        dir('artefact/intergov/apis/message') {
                             sh '''
                                 npm install swagger-cli
 
@@ -487,13 +487,13 @@ pipeline {
 
                 }
 
-                stage('Aretfact - message_rx_api - gw') {
+                stage('artefact - message_rx_api - gw') {
 
                     environment {
                         //hamlet deployment variables
                         DEPLOYMENT_UNITS = 'messagerx-api'
                         SEGMENT = 'intergov'
-                        BUILD_PATH = 'intergov/apis/message_rx'
+                        BUILD_PATH = 'artefact/intergov/apis/message_rx'
                         GENERATION_CONTEXT_DEFINED = ''
 
                         image_format = 'openapi'
@@ -501,7 +501,7 @@ pipeline {
 
                     steps {
 
-                        dir('aretfact/intergov/apis/message_rx') {
+                        dir('artefact/intergov/apis/message_rx') {
                             sh '''
                                 npm install swagger-cli
 
@@ -544,13 +544,13 @@ pipeline {
 
                 }
 
-                stage('Aretfact - subscriptions_api - gw') {
+                stage('artefact - subscriptions_api - gw') {
 
                     environment {
                         //hamlet deployment variables
                         DEPLOYMENT_UNITS = 'subscriptions-api'
                         SEGMENT = 'intergov'
-                        BUILD_PATH = 'intergov/apis/subscriptions'
+                        BUILD_PATH = 'artefact/intergov/apis/subscriptions'
                         GENERATION_CONTEXT_DEFINED = ''
 
                         image_format = 'openapi'
@@ -558,7 +558,7 @@ pipeline {
 
                     steps {
 
-                        dir('aretfact/intergov/apis/subscriptions') {
+                        dir('artefact/intergov/apis/subscriptions') {
                             sh '''
                                 npm install swagger-cli
 
@@ -602,16 +602,16 @@ pipeline {
                 }
 
                 // Intergov - Processors
-                stage('Artefact - Intergov - processor') {
+                stage('artefact - Intergov - processor') {
 
                     environment {
                         //hamlet deployment variables
                         DEPLOYMENT_UNITS =  'proc-msg,proc-msgupdater,proc-callbdel,proc-callbspd,proc-rejstat,proc-docspider,proc-channelrouter,proc-channelpoller,proc-subhandler,proc-chnmsgret'
                         SEGMENT = 'intergov'
                         BUILD_PATH = 'artefact/intergov/'
-                        DOCKER_CONTEXT_DIR = 'aretefact/intergov/'
+                        DOCKER_CONTEXT_DIR = 'artefact/intergov/'
                         BUILD_SRC_DIR = ''
-                        DOCKER_FILE = 'aretfact/intergov/docker/node.Dockerfile'
+                        DOCKER_FILE = 'artefact/intergov/docker/node.Dockerfile'
                         GENERATION_CONTEXT_DEFINED = ''
 
                         image_format = 'docker'
