@@ -184,6 +184,7 @@ pipeline {
 
                         dir('artefact/serverless') {
                             sh '''
+                                mkdir -p ${WORKSPACE}/artefact/dist/
                                 cp dist/document_api/document_api.zip ${WORKSPACE}/artefact/dist/lambda.zip
                             '''
                         }
@@ -234,6 +235,7 @@ pipeline {
 
                         dir('artefact/serverless') {
                             sh '''
+                                mkdir -p ${WORKSPACE}/artefact/dist/
                                 cp dist/message_api/message_api.zip ${WORKSPACE}/artefact/dist/lambda.zip
                             '''
                         }
@@ -284,6 +286,7 @@ pipeline {
 
                         dir('artefact/serverless') {
                             sh '''
+                                mkdir -p ${WORKSPACE}/artefact/dist/
                                 cp dist/message_rx_api/message_rx_api.zip ${WORKSPACE}/artefact/dist/lambda.zip
                             '''
                         }
@@ -334,6 +337,7 @@ pipeline {
 
                         dir('artefact/serverless') {
                             sh '''
+                                mkdir -p ${WORKSPACE}/artefact/dist/
                                 cp dist/subscriptions_api/subscriptions_api.zip ${WORKSPACE}/artefact/dist/lambda.zip
                             '''
                         }
