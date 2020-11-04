@@ -503,6 +503,12 @@ pipeline {
 
                         dir('artefact/intergov/apis/message_rx') {
                             sh '''
+
+                                # Workaround for missing api spec
+                                if [[ ! -f swagger.yaml ]];
+                                    cp ../../../serverless/apis/swagger.yaml ./
+                                fi
+
                                 npm install swagger-cli
 
                                 npx swagger-cli bundle --dereference --outfile openapi-extended-base.json --type json swagger.yaml
