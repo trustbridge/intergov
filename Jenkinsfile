@@ -505,7 +505,7 @@ pipeline {
                             sh '''
 
                                 # Workaround for missing api spec
-                                if [[ ! -f swagger.yaml ]];
+                                if [[ ! -f swagger.yaml ]]; then
                                     cp ../../../serverless/apis/swagger.yaml ./
                                 fi
 
