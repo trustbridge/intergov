@@ -31,9 +31,9 @@ class EnqueueMessageUseCase:
     def execute(self, message):
         logger.info("Posting the message %s", message)
         if not message.is_valid():
-            raise EnqueueMessageFailure("can't enqueue invalid message")
+            raise EnqueueMessageFailure("Can't enqueue invalid message (%s)", message.validation_errors())
         if not message.sender_ref:
-            raise EnqueueMessageFailure("received messages must have sender_ref")
+            raise EnqueueMessageFailure("Received messages must have sender_ref")
 
         posted = self.bc_inbox.post(message)
 
