@@ -35,7 +35,7 @@ class AuthenticatedObjectAccessUseCase:
 
         if not obj:
             logging.error(
-                "For object %s the ACL record exists but object lake one is not",
+                "For object %s the ACL record exists but object is not in the object lake",
                 uri
             )
             return None
