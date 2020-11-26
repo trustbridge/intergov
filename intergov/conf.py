@@ -30,7 +30,7 @@ def env(name, default=None):
     return value
 
 
-# Allows for an empty string to be treated as None rather than empty string
+# Allows for an empty senvironmenttring to be treated as None rather than empty string
 def env_none(name, default=None):
     if name in os.environ:
         val = string_or_b64kms(os.environ[name])
@@ -267,6 +267,8 @@ def env_postgres_config(prefix):
     return config
 
 
+JURISDICTION = env('IGL_JURISDICTION', default='AU')
+
 # Statd monitoring (if enabled)
 # We have these configuration values global for all our sub-components
 # because it's simpler
@@ -274,3 +276,15 @@ STATSD_HOST = env_none('MON_STATSD_HOST', default=None)
 if STATSD_HOST:
     STATSD_PREFIX = env_none('MON_STATSD_PREFIX', default='intergov')
     STATSD_PORT = int(env_none('MON_STATSD_PORT', default=8125))
+
+
+# Cloudwatch config (if enabled)
+SEND_CLOUDWATCH_METRICS = env_bool("SEND_CLOUDWATCH_METRICS", default=False)
+if SEND_CLOUDWATCH_METRICS:
+    # The instance policy is used if empty; useful for local development and non-native AWS setups
+    CLOUDWATCH_NAMESPACE = env_none('CLOUDWATCH_NAMESPACE', default=None) or f"intergov_{JURISDICTION}"
+    CW_AWS_ACCESS_KEY_ID = env("CW_AWS_ACCESS_KEY_ID", default=None) or None
+    CW_AWS_SECRET_ACCESS_KEY = env("CW_AWS_SECRET_ACCESS_KEY", default=None) or None
+
+# Console counters output: just print their values
+PRINT_CONSOLE_METRICS = env_bool("PRINT_CONSOLE_METRICS", default=False)

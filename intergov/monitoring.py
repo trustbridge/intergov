@@ -1,6 +1,13 @@
+"""
+The monitoring module implements all possible monitoring backends (like Statsd or Cloudwatch)
+which can be turned on and off for specific setups.
+If the backend is not configured then no data is sent to it.
+"""
 import sys
+import time
 from functools import wraps
 
+import boto3
 import statsd
 from intergov.loggers import logger
 from intergov import conf as ig_conf
@@ -42,65 +49,67 @@ class statsd_timer():
     def __call__(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if not ig_conf.STATSD_HOST:
-                result = func(*args, **kwargs)
-                return result
-            scl = statsd.Timer(ig_conf.STATSD_PREFIX)
-            scl.start()
-            result = None
-            try:
-                result = func(*args, **kwargs)
-            except Exception:
-                raise
-            finally:
-                scl.stop(self.counter_name)
+            t0 = time.time()
+            result = func(*args, **kwargs)
+            tdiff = time.time() - t0
+            if ig_conf.PRINT_CONSOLE_METRICS:
+                print(f"\t{self.counter_name}:\t{tdiff*1000}ms")
+            if ig_conf.STATSD_HOST:
+                statsd_timer = statsd.Timer(ig_conf.STATSD_PREFIX)
+                statsd_timer.send(self.counter_name, tdiff)
+            if ig_conf.SEND_CLOUDWATCH_METRICS:
+                _send_cloudwatch_metric(self.counter_name, tdiff * 1000, unit="Milliseconds")
             return result
 
         return wrapper
 
 
-# def statsd_timer(counter_name):
-#     def decorator(method):
-#         @wraps(method)
-#         def timed(*args, **kw):
-#             if not ig_conf.STATSD_HOST:
-#                 result = method(*args, **kw)
-#                 return result
-#             scl = statsd.Timer(ig_conf.STATSD_PREFIX)
-#             scl.start()
-#             result = None
-#             try:
-#                 result = method(*args, **kw)
-#             except Exception:
-#                 raise
-#             finally:
-#                 scl.stop(counter_name)
-#             return result
-#         return timed
-#     return decorator
-
-
 def statsd_gauge(name, value):
+    raise NotImplementedError()
+
+
+def _send_cloudwatch_metric(name, value, unit):
     try:
-        if not isinstance(value, (float, int)):
-            value = float(value)
-        if not ig_conf.STATSD_HOST:
-            return
-        else:
-            gauge = statsd.Gauge(ig_conf.STATSD_PREFIX)
-            gauge.send(name, value)
+        cloudwatch = boto3.Session(
+            aws_access_key_id=ig_conf.CW_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=ig_conf.CW_AWS_SECRET_ACCESS_KEY,
+            region_name=ig_conf.AWS_REGION,
+        ).client('cloudwatch')
+        response = cloudwatch.put_metric_data(
+            MetricData=[
+                {
+                    'MetricName': name,
+                    'Dimensions': [
+                        {
+                            'Name': 'Env',
+                            'Value': ig_conf.JURISDICTION
+                        },
+                    ],
+                    'Unit': unit,  # 'Count' 'Milliseconds'
+                    'Value': value
+                },
+            ],
+            Namespace=ig_conf.CLOUDWATCH_NAMESPACE
+        )
+        if response.get("ResponseMetadata", {}).get("HTTPStatusCode") != 200:
+            logger.warning("Unable to send CloudWatch metric - %s", response)
     except Exception as e:
         logger.exception(e)
 
 
-def statsd_counter(name, value):
+def increase_counter(name, value=1):
+    """
+    Sends one-time counter to all backends configured for this setup
+    """
     try:
         if not isinstance(value, (float, int)):
             value = float(value)
-        if not ig_conf.STATSD_HOST:
-            return
-        else:
+        if ig_conf.PRINT_CONSOLE_METRICS:
+            print(f"\t{name}:\t{value}")
+        if ig_conf.STATSD_HOST:
             counter = statsd.Counter(ig_conf.STATSD_PREFIX)
             counter.increment(name, value)
+        if ig_conf.SEND_CLOUDWATCH_METRICS:
+            _send_cloudwatch_metric(name, value, unit="Count")
     except Exception as e:
         logger.exception(e)

@@ -8,6 +8,7 @@ from intergov.processors.common.utils import get_channels_to_subscribe_as
 from intergov.use_cases.request_channel_api import (
     RequestChannelAPIUseCase, SubscriptionFailure, InvalidSubscriptionParameters
 )
+from intergov.monitoring import increase_counter
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +23,12 @@ class SubscriptionHandler:
     def run(self):
         for channel in get_channels_to_subscribe_as(env.ROUTING_TABLE, env.JURISDICTION):
             if self.should_update_subscription():
+                increase_counter("subscription.attempt")
                 logger.info("Subscribing to channel %s", channel["Name"])
                 try:
                     self.subscribe(channel)
                 except Exception as e:
+                    increase_counter("subscription.error")
                     logger.error("Unable to subscribe to channel %s - %s", channel, str(e))
 
     def should_update_subscription(self):
@@ -43,6 +46,7 @@ class SubscriptionHandler:
             logger.error(e)
         else:
             self.last_subscribed_at = now
+            increase_counter("subscription.success")
             logger.info('Successfully subscribed at %s' % self.last_subscribed_at)
 
     @staticmethod
@@ -56,6 +60,7 @@ class SubscriptionHandler:
 if __name__ == '__main__':
     processor = SubscriptionHandler()
     sleep_period = 30
+    increase_counter("subscription.start-process")
     while True:
         processor.run()
         sleep(sleep_period)

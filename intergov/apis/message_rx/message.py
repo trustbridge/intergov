@@ -2,11 +2,11 @@ from flask import (
     Blueprint, Response, request
 )
 
-from intergov.apis.message_rx.conf import Config
-from intergov.monitoring import statsd_timer
-from intergov.loggers import logging
-
 from intergov.apis.common.utils import routing
+from intergov.apis.message_rx.conf import Config
+from intergov.loggers import logging
+from intergov.monitoring import increase_counter
+from intergov.monitoring import statsd_timer
 from intergov.repos.channel_notifications_inbox import ChannelNotificationRepo
 from intergov.use_cases.process_channel_notifications import EnqueueChannelNotificationUseCase
 from intergov.use_cases.route_to_channel import get_channel_by_id
@@ -34,6 +34,7 @@ def channel_message_confirm(channel_id):
             channel_id, Config.ROUTING_TABLE
         )
         return Response("Bad channel_id", status=400)
+    increase_counter("message_rx.channel.confirmed")
     return Response(request.args.get('hub.challenge'))
 
 
@@ -45,6 +46,7 @@ def channel_message_receive(channel_id):
     Handles the pings
     """
     body = request.get_json(silent=True)
+    increase_counter("message_rx.message.received")
     repo = ChannelNotificationRepo(
         Config.CHANNEL_NOTIFICATION_REPO_CONF
     )
