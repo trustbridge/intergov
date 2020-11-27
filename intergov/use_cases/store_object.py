@@ -2,9 +2,10 @@ import hashlib
 import multihash
 
 from intergov.monitoring import statsd_timer
+from intergov.use_cases.common import BaseUseCase
 
 
-class StoreObjectUseCase:
+class StoreObjectUseCase(BaseUseCase):
     """
     Used by the document API
 
@@ -43,6 +44,7 @@ class StoreObjectUseCase:
         If fboj is provided (file-like object) then saves it.
         """
         assert bool(fname) != bool(fobj)
+        super().execute()
         if fname:
             # not sure we ever need it at all, but let this stub be here
             raise NotImplementedError("no fname save is supported yet")

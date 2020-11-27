@@ -3,8 +3,10 @@ from libtrustbridge.websub.repos import SubscriptionsRepo
 
 from intergov.monitoring import statsd_timer
 
+from intergov.use_cases.common import BaseUseCase
 
-class SubscriptionRegisterUseCase:
+
+class SubscriptionRegisterUseCase(BaseUseCase):
     """
     Used by the subscription API
 
@@ -19,7 +21,7 @@ class SubscriptionRegisterUseCase:
     def execute(self, url, predicate, expiration=None):
         # this operation deletes all previous subscription for given url and pattern
         # and replaces them with new one. Techically it's create or update operation
-
+        super().execute()
         posted = self.subscriptions_repo.subscribe_by_pattern(Pattern(predicate), url,  expiration)
         if not posted:
             return None

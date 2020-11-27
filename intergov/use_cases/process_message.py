@@ -3,6 +3,7 @@ import os
 from intergov.domain.wire_protocols.generic_discrete import Message
 from intergov.loggers import logging  # NOQA
 from intergov.monitoring import statsd_timer
+from intergov.use_cases.common import BaseUseCase
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ ENV_SEND_LOOPBACK_MESSAGES = str(
 ).lower() == "true"
 
 
-class ProcessMessageUseCase:
+class ProcessMessageUseCase(BaseUseCase):
     """
     Used by the message processing background worker.
 
@@ -59,6 +60,7 @@ class ProcessMessageUseCase:
         fetched_bc_inbox = self.bc_inbox_repo.get()
         if not fetched_bc_inbox:
             return None
+        super().execute()
         (queue_message_id, message) = fetched_bc_inbox
         return self.process(queue_message_id, message)
 

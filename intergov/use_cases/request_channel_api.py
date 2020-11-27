@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 import requests
 
 from intergov.loggers import logging
+from intergov.use_cases.common import BaseUseCase
 from intergov.use_cases.get_cognito_auth import GetCognitoAuthUseCase
 
 logger = logging.getLogger()
@@ -20,7 +21,7 @@ class SubscriptionFailure(ChannelApiFailure):
     pass
 
 
-class RequestChannelAPIUseCase:
+class RequestChannelAPIUseCase(BaseUseCase):
     CHANNEL_API_GET_MESSAGE_ENDPOINT = '/messages'
     CHANNEL_API_SUBSCRIBE_BY_JURISDICTION_ENDPOINT = '/messages/subscriptions/by_jurisdiction'
 

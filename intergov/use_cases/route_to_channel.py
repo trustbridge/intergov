@@ -1,10 +1,11 @@
 from intergov.loggers import logging
 from intergov.monitoring import statsd_timer
+from intergov.use_cases.common import BaseUseCase
 
 logger = logging.getLogger(__name__)
 
 
-class RouteToChannelUseCase:
+class RouteToChannelUseCase(BaseUseCase):
     """
     This code makes a routing decision.
     "Which channel should I use to send this message".
@@ -36,7 +37,7 @@ class RouteToChannelUseCase:
         # so routing table is a set of scalar values with channel details,
         # and use-case itself does all active (and boring) actions to send message.
         # New logic could be easily converted to the smart channels approach by moving the code.
-
+        super().execute()
         # we return message ID if at least one channel accepted the message and False otherwise
         result = False
 

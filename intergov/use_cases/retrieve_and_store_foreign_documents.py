@@ -9,11 +9,12 @@ from intergov.conf import env_json
 from intergov.domain.jurisdiction import Jurisdiction
 from intergov.loggers import logging
 from intergov.monitoring import statsd_timer
+from intergov.use_cases.common import BaseUseCase
 
 logger = logging.getLogger(__name__)
 
 
-class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
+class RetrieveAndStoreForeignDocumentsUseCase(BaseUseCase, AuthMixin):
     """
     Processes single request from the queue to download
     some remote document.
@@ -45,6 +46,7 @@ class RetrieveAndStoreForeignDocumentsUseCase(AuthMixin):
         if not retrieval_task:
             return False
         (job_id, job) = retrieval_task
+        super().execute()
         return self.process(job_id, job)
 
     @statsd_timer("usecase.RetrieveAndStoreForeignDocumentsUseCase.process")

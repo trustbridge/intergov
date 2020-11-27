@@ -1,5 +1,6 @@
 from intergov.loggers import logging
 from intergov.monitoring import statsd_timer
+from intergov.use_cases.common import BaseUseCase
 
 logger = logging.getLogger(__name__)
 
@@ -8,7 +9,7 @@ class EnqueueMessageFailure(Exception):
     pass
 
 
-class EnqueueMessageUseCase:
+class EnqueueMessageUseCase(BaseUseCase):
     """
     Used by the message_api(tx) and message_rx_api
 
@@ -29,6 +30,7 @@ class EnqueueMessageUseCase:
 
     @statsd_timer("usecase.EnqueueMessageUseCase.execute")
     def execute(self, message):
+        super().execute(message)
         logger.info("Posting the message %s", message)
         if not message.is_valid():
             raise EnqueueMessageFailure("Can't enqueue invalid message (%s)", message.validation_errors())

@@ -1,7 +1,8 @@
 from intergov.monitoring import statsd_timer
+from intergov.use_cases.common import BaseUseCase
 
 
-class GetMessageBySenderRefUseCase:
+class GetMessageBySenderRefUseCase(BaseUseCase):
     """
     Used by the message retrieve endpoint
 
@@ -16,6 +17,7 @@ class GetMessageBySenderRefUseCase:
     @statsd_timer("usecase.GetMessageBySenderRefUseCase.execute")
     def execute(self, sender_ref):
         assert ':' in sender_ref, "sender_ref must be in format AU:XXXX, where AU is a sender"
+        super().execute()
         sender, sender_ref = sender_ref.split(':', maxsplit=1)
         found = self.message_lake.get(sender, sender_ref)
         if not found:

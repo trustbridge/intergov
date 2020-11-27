@@ -3,9 +3,11 @@ import uuid
 
 from intergov.domain.wire_protocols.generic_discrete import Message
 from intergov.loggers import logging
+from intergov.monitoring import increase_counter
 from intergov.repos.bc_inbox.elasticmq.elasticmqrepo import BCInboxRepo
 from intergov.repos.channel_notifications_inbox import ChannelNotificationRepo
 from intergov.use_cases import EnqueueMessageUseCase
+from intergov.use_cases.common import BaseUseCase
 from intergov.use_cases.request_channel_api import RequestChannelAPIUseCase, ChannelApiFailure
 from intergov.use_cases.route_to_channel import get_channel_by_id
 
@@ -16,7 +18,7 @@ class ChannelNotFound(Exception):
     pass
 
 
-class ChannelNotificationUseCase:
+class ChannelNotificationUseCase(BaseUseCase):
     CHANNEL_API_GET_MESSAGE_ENDPOINT = 'messages'
     CHANNEL_ID = 'channel_id'
     NOTIFICATION_PAYLOAD = 'notification_payload'
@@ -68,17 +70,17 @@ class ProcessChannelNotificationUseCase(ChannelNotificationUseCase):
         Get message from channel API and post it to message API.
         Retry in case of failure
         """
-
         job = self.channel_notification_repo.get_job()
         if not job:
             return
-
+        super().execute()
         queue_message_id, job_payload = job
         attempt = job_payload[self.ATTEMPT]
 
         try:
             self.process(job_payload)
         except ChannelApiFailure as e:
+            increase_counter("usecase.ProcessChannelNotificationUseCase.failure")
             logger.info("%s: processing channel notification failure", queue_message_id)
             logger.exception(e)
             if attempt < self.MAX_ATTEMPTS:
@@ -100,6 +102,7 @@ class ProcessChannelNotificationUseCase(ChannelNotificationUseCase):
         notification_payload = job_payload[self.NOTIFICATION_PAYLOAD]
         message = self._get_message(channel, notification_payload['id'])
         self.enqueue_message_use_case.execute(message)
+        increase_counter("usecase.ProcessChannelNotificationUseCase.processed")
 
     def _get_message(self, channel, message_id):
         request_channel_use_case = RequestChannelAPIUseCase(channel)

@@ -1,14 +1,13 @@
 from intergov.domain.wire_protocols import generic_discrete as gd
 from intergov.loggers import logging  # NOQA
 from intergov.monitoring import statsd_timer
-from intergov.use_cases.common.errors import (
-    ConflictError,
-    BadParametersError
-)
+from intergov.use_cases.common import BaseUseCase
+from intergov.use_cases.common.errors import ConflictError, BadParametersError
+
 logger = logging.getLogger(__name__)
 
 
-class PatchMessageMetadataUseCase:
+class PatchMessageMetadataUseCase(BaseUseCase):
     """
     Used by the message patch endpoint
 
@@ -22,6 +21,7 @@ class PatchMessageMetadataUseCase:
     @statsd_timer("usecase.PatchMessageMetadataUseCase.execute")
     def execute(self, reference, payload):
         assert ':' in reference, "sender_ref must be in format AU:XXXX, where AU is a sender"
+        super().execute()
         sender, sender_ref = reference.split(':', maxsplit=1)
         # logger.info("Update message %s metadata: %s", reference, payload)
         message = None

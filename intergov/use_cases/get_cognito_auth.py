@@ -4,6 +4,7 @@ import datetime
 import requests
 
 from intergov.loggers import logging
+from intergov.use_cases.common import BaseUseCase
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ class GetCognitoAuthInitError(Exception):
     pass
 
 
-class GetCognitoAuthUseCase:
+class GetCognitoAuthUseCase(BaseUseCase):
     def __init__(self, client_id, client_secret, scope, token_endpoint):
         self.client_id = client_id
         self.client_secret = client_secret

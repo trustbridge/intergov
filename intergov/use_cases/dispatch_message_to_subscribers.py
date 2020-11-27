@@ -5,11 +5,12 @@ from libtrustbridge.websub import repos
 from intergov.loggers import logging
 from intergov.monitoring import statsd_timer
 from intergov.serializers import generic_discrete_message as ser
+from intergov.use_cases.common import BaseUseCase
 
 logger = logging.getLogger(__name__)
 
 
-class DispatchMessageToSubscribersUseCase:
+class DispatchMessageToSubscribersUseCase(BaseUseCase):
     """
     Used by the callbacks spreader worker.
 
@@ -43,6 +44,7 @@ class DispatchMessageToSubscribersUseCase:
         fetched_publish = self.notifications.get_job()
         if not fetched_publish:
             return None
+        super().execute()
         (publish_msg_id, message_job) = fetched_publish
         return self.process(publish_msg_id, message_job)
 

@@ -1,7 +1,8 @@
 from intergov.monitoring import statsd_timer
+from intergov.use_cases.common import BaseUseCase
 
 
-class RejectPendingMessageUseCase:
+class RejectPendingMessageUseCase(BaseUseCase):
     """
     Gets a single message from rejected message repo
     If rejected message payload is valid - has sender, sender_ref fields
@@ -18,11 +19,12 @@ class RejectPendingMessageUseCase:
         self.message_lake = message_lake_repo
 
     def execute(self):
+
         update = self.rejected_messages.get()
         if not update:
             return None
-        else:
-            (upd_id, upd_msg) = update
+        (upd_id, upd_msg) = update
+        super().execute()
         return self.process(upd_id, upd_msg)
 
     @statsd_timer("usecase.RejectPendingMessageUseCase.process")

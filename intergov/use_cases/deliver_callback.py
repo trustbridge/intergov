@@ -1,15 +1,15 @@
 import random
 import requests
-
-from intergov.loggers import logging
 from libtrustbridge.websub import repos
 
+from intergov.loggers import logging
 from intergov.monitoring import statsd_timer
+from intergov.use_cases.common import BaseUseCase
 
 logger = logging.getLogger(__name__)
 
 
-class DeliverCallbackUseCase:
+class DeliverCallbackUseCase(BaseUseCase):
     """
     Is used by a callback deliverer worker
 
@@ -32,8 +32,8 @@ class DeliverCallbackUseCase:
         deliverable = self.delivery_outbox.get_job()
         if not deliverable:
             return None
-        else:
-            (queue_msg_id, job) = deliverable
+        super().execute()
+        (queue_msg_id, job) = deliverable
         return self.process(queue_msg_id, job)
 
     @statsd_timer("usecase.DeliverCallbackUseCase.process")
