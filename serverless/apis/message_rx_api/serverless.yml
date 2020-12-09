@@ -1,0 +1,33 @@
+service: intergov-message-rx-api
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+
+package:
+  individually: true
+  include:
+    - '!../**'
+    - '../intergov/**'
+  exclude:
+    - '**'
+
+custom:
+  wsgi:
+    app: intergov.apis.message_rx.lambda.app
+    packRequirements: false
+  pythonRequirements:
+    dockerizePip: true
+    fileName: ../requirements/prod.txt
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: dev
+  region: ap-southeast-2
+
+functions:
+  message_rx_api:
+    handler: wsgi_handler.handler
+    events:
+      - http: ANY /
