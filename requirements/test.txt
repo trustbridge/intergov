@@ -7,7 +7,7 @@ pytest-cov
 pytest-flask==0.15.1
 # pytest-docker
 # docker-compose
-pyyaml==4.2b4
+pyyaml==5.4
 psycopg2-binary==2.8.3
 sqlalchemy_utils
 responses==0.10.15
